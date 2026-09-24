@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext.jsx";
+import NotificationBell from "./NotificationBell.jsx";
 
 export default function TopNav() {
   const { session, signOut } = useAuth();
@@ -9,6 +10,7 @@ export default function TopNav() {
       <nav>
         <NavLink to="/dashboard">Dashboard</NavLink>
         <NavLink to="/leads/new">+ Add Lead</NavLink>
+        <NotificationBell />
         {session?.name && <span className="muted user-name">{session.name}</span>}
         <button type="button" className="link-btn" onClick={signOut}>Logout</button>
       </nav>

@@ -23,6 +23,13 @@ export const sendQuotation = (id) => request(`/api/quotations/${id}/send`, { met
 export const retryMessage = (id) => request(`/api/whatsapp-messages/${id}/retry`, { method: "POST", auth: true });
 export const confirmOrder = (leadId) => request(`/api/orders/confirm/${leadId}`, { method: "POST", auth: true });
 
+// ---- Notifications (bell in navbar) -------------------------------------
+export const getNotifications = (page = 0, size = 20) =>
+  request(`/api/notifications?page=${page}&size=${size}`, { auth: true });
+export const getUnreadNotificationCount = () => request("/api/notifications/unread-count", { auth: true });
+export const markNotificationRead = (id) => request(`/api/notifications/${id}/read`, { method: "POST", auth: true });
+export const markAllNotificationsRead = () => request("/api/notifications/read-all", { method: "POST", auth: true });
+
 // ---- Customer (secure token in the link, no login) ---------------------
 export const getEnquiryPrefill = (token) => request(`/api/public/enquiry/${token}`);
 export const submitEnquiry = (payload) => request("/api/public/enquiry", { method: "POST", body: payload });
