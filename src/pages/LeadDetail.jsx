@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
-  confirmOrder, getLeadDetail, resendWelcome, retryMessage, sendQuotation,
+  clearWhatsAppHistory, confirmOrder, getLeadDetail, resendWelcome, retryMessage, sendQuotation,
 } from "../api/index.js";
 import Alert from "../components/Alert.jsx";
 import QuoteBuilder from "../components/QuoteBuilder.jsx";
@@ -10,6 +10,13 @@ import { TIMELINE_LABELS, TIMELINE_ORDER } from "../utils/constants.js";
 import { formatDateTime, labelize, money } from "../utils/format.js";
 
 const EXTRA_STATUSES = ["CHANGES_REQUESTED", "REJECTED", "CLOSED"];
+
+/** Most recent "request changes" note the customer left on this quotation, if any. */
+function latestChangeRequest(quotation) {
+  const responses = (quotation.customerResponses || []).filter((r) => r.responseType === "CHANGES_REQUESTED");
+  if (!responses.length) return null;
+  return responses.reduce((latest, r) => (new Date(r.createdAt) > new Date(latest.createdAt) ? r : latest));
+}
 
 function Timeline({ status }) {
   const idx = TIMELINE_ORDER.indexOf(status);
@@ -30,6 +37,7 @@ export default function LeadDetail() {
   const [notice, setNotice] = useState(null); // { type: "success" | "error", text }
   const [busy, setBusy] = useState("");
   const [showQuoteBuilder, setShowQuoteBuilder] = useState(false);
+  const [expandedQuotationId, setExpandedQuotationId] = useState(null);
 
   const load = useCallback(async () => {
     try {
@@ -165,22 +173,50 @@ export default function LeadDetail() {
                 <tr><th>Number</th><th>Total</th><th>Status</th><th>Valid until</th><th></th></tr>
               </thead>
               <tbody>
-                {lead.quotations.map((q) => (
-                  <tr key={q.id}>
-                    <td>{q.quotationNumber}</td>
-                    <td>{money(q.totalAmount)}</td>
-                    <td><StatusBadge status={q.status} /></td>
-                    <td>{q.validUntil || "-"}</td>
-                    <td>
-                      {q.status === "GENERATED" && (
-                        <button type="button" className="btn btn-secondary" disabled={!!busy}
-                          onClick={() => run(`send-${q.id}`, () => sendQuotation(q.id), "Quotation sent via WhatsApp.")}>
-                          {busy === `send-${q.id}` ? "Sending…" : "Send via WhatsApp"}
-                        </button>
+                {lead.quotations.map((q) => {
+                  const changeRequest = q.status === "CHANGES_REQUESTED" ? latestChangeRequest(q) : null;
+                  const isExpanded = expandedQuotationId === q.id;
+                  return (
+                    <Fragment key={q.id}>
+                      <tr>
+                        <td>{q.quotationNumber}</td>
+                        <td>{money(q.totalAmount)}</td>
+                        <td>
+                          {changeRequest ? (
+                            <button
+                              type="button"
+                              className="status-badge-btn"
+                              title="Click to view the changes the customer requested"
+                              onClick={() => setExpandedQuotationId(isExpanded ? null : q.id)}
+                            >
+                              <StatusBadge status={q.status} />
+                            </button>
+                          ) : (
+                            <StatusBadge status={q.status} />
+                          )}
+                        </td>
+                        <td>{q.validUntil || "-"}</td>
+                        <td>
+                          {q.status === "GENERATED" && (
+                            <button type="button" className="btn btn-secondary" disabled={!!busy}
+                              onClick={() => run(`send-${q.id}`, () => sendQuotation(q.id), "Quotation sent via WhatsApp.")}>
+                              {busy === `send-${q.id}` ? "Sending…" : "Send via WhatsApp"}
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                      {isExpanded && changeRequest && (
+                        <tr className="change-request-row">
+                          <td colSpan={5}>
+                            <strong>Customer requested changes:</strong>
+                            <p>{changeRequest.changeRequestNotes || "No additional notes were provided."}</p>
+                            <span className="muted">{formatDateTime(changeRequest.createdAt)}</span>
+                          </td>
+                        </tr>
                       )}
-                    </td>
-                  </tr>
-                ))}
+                    </Fragment>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -189,7 +225,21 @@ export default function LeadDetail() {
 
       {lead.whatsAppMessages?.length > 0 && (
         <div className="card">
-          <h3>WhatsApp messages</h3>
+          <div className="card-header-row">
+            <h3>WhatsApp messages</h3>
+            <button
+              type="button"
+              className="btn btn-danger"
+              disabled={!!busy}
+              onClick={() => {
+                if (window.confirm("Clear all WhatsApp message history for this lead? This can't be undone.")) {
+                  run("clear-history", () => clearWhatsAppHistory(lead.id), "WhatsApp message history cleared.");
+                }
+              }}
+            >
+              {busy === "clear-history" ? "Clearing…" : "Clear history"}
+            </button>
+          </div>
           <div className="table-wrap">
             <table>
               <thead>

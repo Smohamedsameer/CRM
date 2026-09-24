@@ -21,6 +21,8 @@ export const generateQuotation = (leadId, payload = {}) =>
   request(`/api/quotations/generate/${leadId}`, { method: "POST", body: payload, auth: true });
 export const sendQuotation = (id) => request(`/api/quotations/${id}/send`, { method: "POST", auth: true });
 export const retryMessage = (id) => request(`/api/whatsapp-messages/${id}/retry`, { method: "POST", auth: true });
+export const clearWhatsAppHistory = (leadId) =>
+  request(`/api/whatsapp-messages/lead/${leadId}`, { method: "DELETE", auth: true });
 export const confirmOrder = (leadId) => request(`/api/orders/confirm/${leadId}`, { method: "POST", auth: true });
 
 // ---- Notifications (bell in navbar) -------------------------------------

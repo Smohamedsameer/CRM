@@ -134,6 +134,15 @@ th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--bor
 th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; }
 .total-row td { font-weight: 700; }
 
+.card-header-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
+.card-header-row h3 { margin-bottom: 0; }
+
+.status-badge-btn { background: none; border: none; padding: 0; cursor: pointer; }
+.status-badge-btn .badge { text-decoration: underline dotted; }
+
+.change-request-row td { background: #fce8e6; }
+.change-request-row p { margin: 6px 0; white-space: pre-wrap; }
+
 .pagination { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; gap: 12px; }
 
 .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
