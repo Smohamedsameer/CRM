@@ -6,6 +6,7 @@ import AddLead from "./pages/AddLead.jsx";
 import LeadDetail from "./pages/LeadDetail.jsx";
 import Enquiry from "./pages/Enquiry.jsx";
 import Quotation from "./pages/Quotation.jsx";
+import PrivacyPolicy from "./pages/PrivacyPolicy.jsx";
 import NotFound from "./pages/NotFound.jsx";
 
 export default function App() {
@@ -14,6 +15,7 @@ export default function App() {
       {/* Customer-facing pages: reached from WhatsApp links, secured by the token in the URL */}
       <Route path="/enquiry/:token" element={<Enquiry />} />
       <Route path="/quotation/:token" element={<Quotation />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
 
       {/* Employee pages */}
       <Route path="/login" element={<Login />} />

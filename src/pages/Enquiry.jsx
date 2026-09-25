@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { getEnquiryPrefill, submitEnquiry } from "../api/index.js";
 import Alert from "../components/Alert.jsx";
 import RadioGroup from "../components/RadioGroup.jsx";
+import PolicyFooter from "../components/PolicyFooter.jsx";
 import {
   BUILDING_TYPES, CLADDING_MATERIALS, COLUMN_TYPES, END_FRAME_TYPES, SCOPE_OF_WORK_OPTIONS,
 } from "../utils/constants.js";
@@ -251,6 +252,7 @@ export default function Enquiry() {
           </form>
         )}
       </div>
+      <PolicyFooter />
     </div>
   );
 }

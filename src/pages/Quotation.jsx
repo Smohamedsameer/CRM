@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { acceptQuotation, getPublicQuotation, quotationPdfUrl, requestQuotationChanges } from "../api/index.js";
 import Alert from "../components/Alert.jsx";
 import StatusBadge from "../components/StatusBadge.jsx";
+import PolicyFooter from "../components/PolicyFooter.jsx";
 import { money } from "../utils/format.js";
 
 const FINAL_STATUSES = ["ACCEPTED", "CHANGES_REQUESTED", "REJECTED", "EXPIRED"];
@@ -118,6 +119,7 @@ export default function Quotation() {
           <Alert type={result?.type}>{result?.text}</Alert>
         </div>
       </div>
+      <PolicyFooter />
     </div>
   );
 }
