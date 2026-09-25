@@ -41,7 +41,7 @@ body { margin: 0; background: var(--bg); color: var(--text); }
 .sidebar-nav { display: flex; flex-direction: column; gap: 4px; }
 .sidebar-link {
   padding: 10px 12px; border-radius: 8px; color: #cfd2da; text-decoration: none;
-  font-weight: 600; font-size: 14px;
+  font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 10px;
 }
 .sidebar-link:hover { background: rgba(255, 255, 255, 0.06); color: #fff; }
 .sidebar-link.active { background: rgba(205, 163, 73, 0.14); color: var(--primary); }
@@ -219,6 +219,32 @@ tbody tr:hover { background: rgba(255, 255, 255, 0.02); }
 .policy ul { padding-left: 20px; }
 .policy li { margin-bottom: 6px; }
 .policy-footer { text-align: center; margin-top: 8px; }
+
+/* ---------- Notifications page ---------- */
+.notif-page-list { list-style: none; margin: 0; padding: 0; }
+.notif-page-item {
+  display: flex; align-items: flex-start; gap: 10px; width: 100%; text-align: left;
+  background: none; border: none; border-bottom: 1px solid var(--border); cursor: pointer;
+  padding: 14px 4px; font-family: inherit; color: var(--text);
+}
+.notif-page-item:last-child { border-bottom: none; }
+.notif-page-item:hover { background: rgba(255, 255, 255, 0.03); }
+.notif-page-item.unread { background: rgba(205, 163, 73, 0.06); }
+.notif-dot { width: 8px; height: 8px; border-radius: 999px; background: var(--primary); margin-top: 6px; flex: none; }
+.notif-page-item:not(.unread) .notif-dot { visibility: hidden; }
+.notif-page-body { display: flex; flex-direction: column; gap: 2px; }
+.notif-page-title { font-weight: 700; font-size: 14px; }
+.notif-page-message { font-size: 13px; color: var(--muted); }
+.notif-page-time { font-size: 12px; }
+
+/* ---------- Client Request page ---------- */
+.client-request-card { }
+.client-request-notes { white-space: pre-wrap; margin: 8px 0 4px; }
+.client-request-reply-sent {
+  margin-top: 10px; padding: 10px 12px; border-radius: 8px;
+  background: rgba(61, 220, 132, 0.08); border: 1px solid rgba(61, 220, 132, 0.25);
+}
+.client-request-reply-sent p { margin: 4px 0 0; white-space: pre-wrap; }
 
 /* ---------- Messages ---------- */
 .error-box, .success-box { padding: 12px 14px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; }

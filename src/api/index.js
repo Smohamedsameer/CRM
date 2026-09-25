@@ -34,6 +34,11 @@ export const getUnreadNotificationCount = () => request("/api/notifications/unre
 export const markNotificationRead = (id) => request(`/api/notifications/${id}/read`, { method: "POST", auth: true });
 export const markAllNotificationsRead = () => request("/api/notifications/read-all", { method: "POST", auth: true });
 
+// ---- Client requests (customer "request changes" notes, with admin reply) ----
+export const getClientRequests = () => request("/api/client-requests", { auth: true });
+export const replyToClientRequest = (id, message) =>
+  request(`/api/client-requests/${id}/reply`, { method: "POST", body: { message }, auth: true });
+
 // ---- Customer (secure token in the link, no login) ---------------------
 export const getEnquiryPrefill = (token) => request(`/api/public/enquiry/${token}`);
 export const submitEnquiry = (payload) => request("/api/public/enquiry", { method: "POST", body: payload });
