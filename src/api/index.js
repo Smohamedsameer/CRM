@@ -39,6 +39,13 @@ export const getClientRequests = () => request("/api/client-requests", { auth: t
 export const replyToClientRequest = (id, message) =>
   request(`/api/client-requests/${id}/reply`, { method: "POST", body: { message }, auth: true });
 
+// ---- Certificates & Documents ----------------------------------------
+export const getDocuments = () => request("/api/documents", { auth: true });
+/** payload: { category, docType, fileName, contentType, dataBase64 } */
+export const uploadDocument = (payload) => request("/api/documents", { method: "POST", body: payload, auth: true });
+export const getDocumentContent = (id) => request(`/api/documents/${id}/content`, { auth: true });
+export const deleteDocument = (id) => request(`/api/documents/${id}`, { method: "DELETE", auth: true });
+
 // ---- Customer (secure token in the link, no login) ---------------------
 export const getEnquiryPrefill = (token) => request(`/api/public/enquiry/${token}`);
 export const submitEnquiry = (payload) => request("/api/public/enquiry", { method: "POST", body: payload });
