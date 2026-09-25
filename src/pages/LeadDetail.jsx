@@ -1,7 +1,7 @@
 import { Fragment, useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
-  clearWhatsAppHistory, confirmOrder, getLeadDetail, resendWelcome, retryMessage, sendQuotation,
+  clearWhatsAppHistory, confirmOrder, getLeadDetail, resendWelcome, retryMessage, sendQuotation, viewQuotationPdf,
 } from "../api/index.js";
 import Alert from "../components/Alert.jsx";
 import QuoteBuilder from "../components/QuoteBuilder.jsx";
@@ -197,12 +197,18 @@ export default function LeadDetail() {
                         </td>
                         <td>{q.validUntil || "-"}</td>
                         <td>
-                          {q.status === "GENERATED" && (
-                            <button type="button" className="btn btn-secondary" disabled={!!busy}
-                              onClick={() => run(`send-${q.id}`, () => sendQuotation(q.id), "Quotation sent via WhatsApp.")}>
-                              {busy === `send-${q.id}` ? "Sending…" : "Send via WhatsApp"}
+                          <div className="table-row-actions">
+                            <button type="button" className="btn btn-secondary btn-sm" disabled={!!busy}
+                              onClick={() => run(`pdf-${q.id}`, () => viewQuotationPdf(q.id), null)}>
+                              {busy === `pdf-${q.id}` ? "Opening…" : "View PDF"}
                             </button>
-                          )}
+                            {q.status === "GENERATED" && (
+                              <button type="button" className="btn btn-secondary btn-sm" disabled={!!busy}
+                                onClick={() => run(`send-${q.id}`, () => sendQuotation(q.id), "Quotation sent via WhatsApp.")}>
+                                {busy === `send-${q.id}` ? "Sending…" : "Send via WhatsApp"}
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                       {isExpanded && changeRequest && (

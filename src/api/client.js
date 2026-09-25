@@ -79,3 +79,32 @@ export async function request(path, { method = "GET", body, auth = false } = {})
 }
 
 export const apiUrl = (path) => `${BASE}${path}`;
+
+/**
+ * Fetches a PDF with the employee's JWT (a plain <a href> can't send an Authorization header) and
+ * opens it in a new tab as a blob URL. Used for admin quotation review, where the PDF route requires
+ * login, unlike the public customer-facing PDF link.
+ */
+export async function openAuthedPdf(path) {
+  const session = sessionStorageHelper.read();
+  const headers = session ? { Authorization: `Bearer ${session.token}` } : {};
+
+  let res;
+  try {
+    res = await fetch(`${BASE}${path}`, { headers });
+  } catch {
+    throw new ApiError("Network error. Please check your connection and try again.", 0);
+  }
+  if (res.status === 401) {
+    if (onUnauthorized) onUnauthorized();
+    throw new ApiError("Your session has expired. Please log in again.", 401);
+  }
+  if (!res.ok) {
+    throw new ApiError("Could not load the PDF.", res.status);
+  }
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  window.open(url, "_blank", "noopener");
+  // Revoke well after the new tab has had time to load it, rather than immediately.
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}

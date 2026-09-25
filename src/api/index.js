@@ -1,4 +1,4 @@
-import { request, apiUrl } from "./client.js";
+import { request, apiUrl, openAuthedPdf } from "./client.js";
 
 // ---- Employee (JWT) ----------------------------------------------------
 export const login = (email, password) =>
@@ -20,6 +20,8 @@ export const resendWelcome = (id) => request(`/api/leads/${id}/resend-welcome`, 
 export const generateQuotation = (leadId, payload = {}) =>
   request(`/api/quotations/generate/${leadId}`, { method: "POST", body: payload, auth: true });
 export const sendQuotation = (id) => request(`/api/quotations/${id}/send`, { method: "POST", auth: true });
+/** Opens a sent (or generated) quotation's PDF in a new tab, for admin review - works for any status. */
+export const viewQuotationPdf = (id) => openAuthedPdf(`/api/quotations/${id}/pdf`);
 export const retryMessage = (id) => request(`/api/whatsapp-messages/${id}/retry`, { method: "POST", auth: true });
 export const clearWhatsAppHistory = (leadId) =>
   request(`/api/whatsapp-messages/lead/${leadId}`, { method: "DELETE", auth: true });
