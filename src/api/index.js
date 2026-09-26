@@ -46,6 +46,16 @@ export const uploadDocument = (payload) => request("/api/documents", { method: "
 export const getDocumentContent = (id) => request(`/api/documents/${id}/content`, { auth: true });
 export const deleteDocument = (id) => request(`/api/documents/${id}`, { method: "DELETE", auth: true });
 
+// ---- Settings ----------------------------------------------------------
+export const getCompanySettings = () => request("/api/settings/company", { auth: true });
+export const updateCompanySettings = (payload) =>
+  request("/api/settings/company", { method: "PUT", body: payload, auth: true });
+export const getPricingSettings = () => request("/api/settings/pricing", { auth: true });
+export const updatePricingSettings = (payload) =>
+  request("/api/settings/pricing", { method: "PUT", body: payload, auth: true });
+export const changePassword = (currentPassword, newPassword) =>
+  request("/api/settings/change-password", { method: "POST", body: { currentPassword, newPassword }, auth: true });
+
 // ---- Customer (secure token in the link, no login) ---------------------
 export const getEnquiryPrefill = (token) => request(`/api/public/enquiry/${token}`);
 export const submitEnquiry = (payload) => request("/api/public/enquiry", { method: "POST", body: payload });
