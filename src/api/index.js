@@ -5,6 +5,7 @@ export const login = (email, password) =>
   request("/api/auth/login", { method: "POST", body: { email, password } });
 
 export const getSummary = () => request("/api/dashboard/summary", { auth: true });
+export const getAnalytics = () => request("/api/dashboard/analytics", { auth: true });
 
 export function getLeads({ status, search, page = 0, size = 20 } = {}) {
   const params = new URLSearchParams({ page: String(page), size: String(size) });

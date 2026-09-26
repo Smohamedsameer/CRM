@@ -3,8 +3,11 @@ import { Link } from "react-router-dom";
 import { getLeads, getSummary } from "../api/index.js";
 import Alert from "../components/Alert.jsx";
 import StatusBadge from "../components/StatusBadge.jsx";
+import LeadAnalytics from "../components/LeadAnalytics.jsx";
 import { STATUSES, SUMMARY_CARDS } from "../utils/constants.js";
 import { formatDate, labelize } from "../utils/format.js";
+
+const PAGE_SIZE = 15;
 
 export default function Dashboard() {
   const [summary, setSummary] = useState(null);
@@ -26,7 +29,7 @@ export default function Dashboard() {
   useEffect(() => {
     let cancelled = false;
     setError("");
-    getLeads({ status, search, page })
+    getLeads({ status, search, page, size: PAGE_SIZE })
       .then((data) => !cancelled && setLeadsPage(data))
       .catch((err) => !cancelled && setError(err.message));
     return () => { cancelled = true; };
@@ -45,6 +48,9 @@ export default function Dashboard() {
 
   const leads = leadsPage?.content ?? [];
   const totalPages = leadsPage?.totalPages ?? 0;
+  const totalElements = leadsPage?.totalElements ?? 0;
+  const from = totalElements === 0 ? 0 : page * PAGE_SIZE + 1;
+  const to = Math.min((page + 1) * PAGE_SIZE, totalElements);
 
   return (
     <div className="container wide">
@@ -107,18 +113,37 @@ export default function Dashboard() {
           </table>
         </div>
 
-        {totalPages > 1 && (
-          <div className="pagination">
-            <button type="button" className="btn btn-secondary" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>
-              Previous
-            </button>
-            <span className="muted">Page {page + 1} of {totalPages} ({leadsPage.totalElements} leads)</span>
-            <button type="button" className="btn btn-secondary" disabled={page + 1 >= totalPages} onClick={() => setPage((p) => p + 1)}>
-              Next
-            </button>
+        {totalElements > 0 && (
+          <div className="pagination pager">
+            <span className="muted">Showing {from}–{to} of {totalElements} leads</span>
+            <div className="pager-controls">
+              <button
+                type="button"
+                className="pager-arrow"
+                aria-label="Previous 15 leads"
+                title="Previous 15"
+                disabled={page === 0}
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+              >
+                &#8249;
+              </button>
+              <span className="pager-page">{page + 1} / {Math.max(1, totalPages)}</span>
+              <button
+                type="button"
+                className="pager-arrow"
+                aria-label="Next 15 leads"
+                title="Next 15"
+                disabled={page + 1 >= totalPages}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                &#8250;
+              </button>
+            </div>
           </div>
         )}
       </div>
+
+      <LeadAnalytics />
     </div>
   );
 }
