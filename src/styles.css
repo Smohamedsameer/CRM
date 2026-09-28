@@ -21,22 +21,47 @@ body { margin: 0; background: var(--bg); color: var(--text); }
 
 :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
-/* ---------- App shell (sidebar + content) ---------- */
-.app-shell { display: flex; min-height: 100vh; }
+/* ---------- App shell (top bar + sidebar + content) ---------- */
+:root { --topbar-h: 68px; }
 
+.app-shell { min-height: 100vh; display: flex; flex-direction: column; }
+.app-body { display: flex; flex: 1; min-height: 0; }
+
+/* Top bar - desktop: brand | centred title | actions */
+.topbar {
+  position: sticky; top: 0; z-index: 60; height: var(--topbar-h);
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px;
+  padding: 0 20px; background: var(--sidebar-bg); border-bottom: 1px solid var(--border);
+}
+.topbar-menu { display: none; }
+.topbar-brand { display: flex; align-items: center; gap: 10px; justify-self: start; }
+.topbar-logo { width: 42px; height: 42px; object-fit: contain; }
+.topbar-brand-short { display: none; font-weight: 700; color: var(--primary); font-size: 15px; letter-spacing: 0.02em; }
+
+.topbar-center { display: flex; flex-direction: column; align-items: center; text-align: center; line-height: 1.15; }
+.topbar-crm { font-weight: 800; font-size: 15px; color: var(--primary); letter-spacing: 0.12em; }
+.topbar-of { font-size: 10px; color: var(--muted); font-style: italic; }
+.topbar-company { font-weight: 600; font-size: 12px; color: var(--text); letter-spacing: 0.02em; }
+
+.topbar-actions { display: flex; align-items: center; gap: 12px; justify-self: end; }
+.topbar-user { font-size: 13px; }
+.topbar-bell .notif-bell-btn { color: #cfd2da; }
+.topbar-bell .notif-bell-btn:hover { background: rgba(255, 255, 255, 0.07); }
+.topbar-logout {
+  display: inline-flex; align-items: center; gap: 8px; background: none; cursor: pointer;
+  color: #ff9a9a; border: 1px solid rgba(255, 107, 107, 0.4); border-radius: 8px;
+  padding: 8px 14px; font-weight: 600; font-size: 14px; font-family: inherit;
+}
+.topbar-logout:hover { background: rgba(255, 107, 107, 0.12); }
+
+/* Sidebar - desktop: fixed column under the top bar, no logout (it's in the top bar) */
 .sidebar {
   width: 240px; flex: 0 0 240px; background: var(--sidebar-bg); color: var(--text);
   display: flex; flex-direction: column; padding: 20px 16px;
-  position: sticky; top: 0; height: 100vh; border-right: 1px solid var(--border);
+  position: sticky; top: var(--topbar-h); height: calc(100vh - var(--topbar-h));
+  align-self: flex-start; border-right: 1px solid var(--border);
 }
-.sidebar-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 22px; padding: 0 4px; }
-.sidebar-logo { width: 34px; height: 34px; object-fit: contain; }
-.sidebar-brand-text { font-weight: 700; font-size: 16px; color: var(--primary); letter-spacing: 0.02em; }
-
-.sidebar-notif { margin-bottom: 14px; padding: 0 4px; }
-.sidebar-notif .notif-bell-btn { color: #cfd2da; }
-.sidebar-notif .notif-bell-btn:hover { background: rgba(255, 255, 255, 0.07); }
-.sidebar-notif .notif-dropdown { left: 0; right: auto; }
+.sidebar-backdrop { display: none; }
 
 .sidebar-nav { display: flex; flex-direction: column; gap: 4px; }
 .sidebar-link {
@@ -46,10 +71,7 @@ body { margin: 0; background: var(--bg); color: var(--text); }
 .sidebar-link:hover { background: rgba(255, 255, 255, 0.06); color: #fff; }
 .sidebar-link.active { background: rgba(205, 163, 73, 0.14); color: var(--primary); }
 
-.sidebar-bottom {
-  margin-top: auto; padding-top: 14px; border-top: 1px solid var(--border);
-  display: flex; flex-direction: column; gap: 8px;
-}
+.sidebar-bottom { display: none; }
 .sidebar-user { font-size: 13px; padding: 0 12px; }
 .sidebar-logout {
   display: flex; align-items: center; gap: 8px; background: none; border: none;
@@ -316,17 +338,38 @@ tbody tr:hover { background: rgba(255, 255, 255, 0.02); }
 .success-box { background: rgba(61, 220, 132, 0.12); color: var(--success); }
 
 @media (max-width: 800px) {
-  .app-shell { flex-direction: column; }
-  .sidebar {
-    width: 100%; height: auto; position: static; flex-direction: row; align-items: center;
-    flex-wrap: wrap; padding: 12px 16px; gap: 12px;
+  :root { --topbar-h: 56px; }
+
+  /* Top bar - mobile: menu + bell on the left, logo + name on the right */
+  .topbar { display: flex; gap: 8px; padding: 0 12px; }
+  .topbar-menu {
+    display: inline-flex; align-items: center; justify-content: center; order: 1;
+    width: 38px; height: 38px; background: none; border: none; border-radius: 8px;
+    color: #cfd2da; cursor: pointer;
   }
-  .sidebar-brand { margin-bottom: 0; margin-right: auto; }
-  .sidebar-notif { margin-bottom: 0; padding: 0; }
-  .sidebar-nav { flex-direction: row; flex-wrap: wrap; }
-  .sidebar-bottom { margin-top: 0; margin-left: auto; padding-top: 0; border-top: none; flex-direction: row; align-items: center; }
-  .sidebar-user { display: none; }
-  .sidebar-notif .notif-dropdown { left: auto; right: 0; }
+  .topbar-menu:hover { background: rgba(255, 255, 255, 0.07); }
+  .topbar-actions { display: contents; }
+  .topbar-bell { order: 2; }
+  .topbar-brand { order: 3; margin-left: auto; }
+  .topbar-logo { width: 34px; height: 34px; }
+  .topbar-brand-short { display: inline; }
+  .topbar-center, .topbar-user, .topbar-logout { display: none; }
+  .topbar-bell .notif-dropdown { position: fixed; top: var(--topbar-h); left: 12px; right: 12px; width: auto; max-width: none; }
+
+  /* Sidebar - mobile: slide-out drawer with logout at the bottom */
+  .sidebar {
+    position: fixed; top: var(--topbar-h); left: 0; bottom: 0; height: auto; width: 260px;
+    align-self: stretch; z-index: 55; transform: translateX(-100%); transition: transform 0.2s ease;
+  }
+  .sidebar.open { transform: translateX(0); box-shadow: 4px 0 24px rgba(0, 0, 0, 0.5); }
+  .sidebar-backdrop {
+    display: block; position: fixed; top: var(--topbar-h); left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.55); z-index: 50;
+  }
+  .sidebar-bottom {
+    display: flex; flex-direction: column; gap: 8px; margin-top: auto;
+    padding-top: 14px; border-top: 1px solid var(--border);
+  }
 }
 
 @media (max-width: 600px) {
