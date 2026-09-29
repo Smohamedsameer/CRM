@@ -146,6 +146,11 @@ export default function Enquiry() {
 
             <hr />
             <h3>2. Building Dimensions</h3>
+            <img
+              src="/diagrams/building-dimensions.png"
+              alt="Diagram showing span/building width, eave height, clear eave height and building height"
+              style={{ width: "100%", maxWidth: 520, display: "block", margin: "0 auto 16px" }}
+            />
             <div className="row">
               <div className="field">
                 <label htmlFor="spanWidthM">Span / Width (metres)</label>

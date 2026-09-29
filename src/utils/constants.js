@@ -54,10 +54,14 @@ export function toneFor(status) {
 // ---- PEB (Pre-Engineered Building) enquiry form options, from the company's PEB request form ----
 export const BUILDING_TYPES = [
   { value: "CLEAR_SPAN", label: "Clear Span" },
+  { value: "CLEAR_SPAN_ARCHED", label: "Clear Span (Arched)" },
   { value: "MULTI_SPAN_1", label: "Multi Span-1" },
   { value: "MULTI_SPAN_2", label: "Multi Span-2" },
   { value: "MULTI_SPAN_3", label: "Multi Span-3" },
+  { value: "MULTI_SPAN_ARCHED", label: "Multi Span (Arched)" },
   { value: "MULTI_GABLE", label: "Multi Gable" },
+  { value: "SINGLE_SLOPE", label: "Single Slope" },
+  { value: "ROOF_SYSTEM", label: "Roof System" },
   { value: "LEAN_TO", label: "Lean-To" },
   { value: "OTHER", label: "Others" },
 ];
