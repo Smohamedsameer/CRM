@@ -168,6 +168,23 @@ textarea { min-height: 90px; resize: vertical; }
 .radio-option { display: flex; align-items: center; gap: 6px; font-weight: 400; font-size: 15px; width: auto; margin: 0; }
 .radio-option input { width: auto; }
 
+.image-radio-group { border: none; padding: 0; margin: 0 0 16px; }
+.image-radio-group legend { font-weight: 600; font-size: 14px; margin-bottom: 8px; padding: 0; }
+.image-radio-options { display: flex; flex-wrap: wrap; gap: 12px; }
+.image-radio-card {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  width: 128px; padding: 10px 8px 12px; border: 1.5px solid #e2e2e2; border-radius: 10px;
+  cursor: pointer; background: #fff; font-weight: 400; margin: 0; transition: border-color .15s, box-shadow .15s;
+}
+.image-radio-card:hover { border-color: #c9c9c9; }
+.image-radio-card.selected { border-color: #2f6fed; box-shadow: 0 0 0 2px rgba(47,111,237,0.15); }
+.image-radio-card input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.image-radio-icon { display: flex; align-items: center; justify-content: center; height: 46px; }
+.image-radio-label { font-size: 13px; text-align: center; line-height: 1.25; }
+.checkbox-options { display: flex; flex-wrap: wrap; gap: 8px 20px; }
+.checkbox-option { display: flex; align-items: center; gap: 6px; font-weight: 400; font-size: 15px; width: auto; margin: 0; }
+.checkbox-option input { width: auto; }
+
 /* ---------- Buttons ---------- */
 .btn {
   cursor: pointer; border: none; border-radius: 8px; padding: 12px 18px;
@@ -441,3 +458,19 @@ tbody tr:hover { background: rgba(255, 255, 255, 0.02); }
 .bars3d-value { fill: var(--text); font-size: 11px; font-weight: 700; }
 @keyframes chart-rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .pie3d-svg, .bars3d-svg { animation: none; } }
+
+
+/* ---------- Dashboard footer ---------- */
+.dash-footer {
+  margin-top: 32px;
+  padding: 18px 0 8px;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.dash-footer p { margin: 0; }
+.dash-footer-dev { font-size: 12px; letter-spacing: 0.03em; }
+.dash-footer-dev span { color: var(--primary); font-weight: 600; }
+.dash-footer span { color: var(--primary); font-weight: 600; }

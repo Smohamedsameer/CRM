@@ -144,6 +144,10 @@ export default function Dashboard() {
       </div>
 
       <LeadAnalytics />
+       <footer className="dash-footer">
+        <p>&copy; {new Date().getFullYear()}<span> Senela International Ventures</span>. All rights reserved.</p>
+        <p className="dash-footer-dev">Developed by <span>Mohd Sameer</span></p>
+      </footer>
     </div>
   );
 }

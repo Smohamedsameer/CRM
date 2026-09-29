@@ -83,3 +83,38 @@ export const SCOPE_OF_WORK_OPTIONS = [
   { value: "SUPPLY_AT_SITE", label: "Only supply (F.O.R at your site)" },
   { value: "OTHER", label: "Other" },
 ];
+
+export const MEASUREMENT_BASIS_OPTIONS = [
+  { value: "CENTRE_TO_CENTRE", label: "Centre to Centre" },
+  { value: "OUT_TO_OUT", label: "Out to Out" },
+];
+
+export const ROOFING_CLADDING_REQUIREMENTS = [
+  { value: "ROOF_ONLY", label: "Roof Only" },
+  { value: "ROOF_AND_GABLE_END", label: "Roof and Gable-End Triangular Area" },
+  { value: "ROOF_GABLE_END_AND_WALLS", label: "Roof, Gable End and Walls" },
+  { value: "FULL_ROOF_GABLE_END_AND_CLADDING", label: "Full Roof, Gable End and Full-Height Cladding" },
+];
+
+export const MAIN_SHED_ROOF_MATERIALS = [
+  { value: "CCGI", label: "CCGI" },
+  { value: "CCGL", label: "CCGL" },
+  { value: "BAREGALVALUME", label: "Bare Galvalume" },
+  { value: "OTHER", label: "Other" },
+];
+
+export const SURFACE_PREPARATION_OPTIONS = [
+  { value: "MECHANICAL_CLEANING", label: "Mechanical Cleaning" },
+  { value: "SAND_BLASTING_ON_STEEL", label: "Sand Blasting on Steel" },
+];
+
+export const PROTECTIVE_COATING_OPTIONS = [
+  { value: "RED_OXIDE_PRIMER", label: "Red Oxide Primer" },
+  { value: "ZINC_CHROMATE_RED_OXIDE_PRIMER", label: "Zinc Chromate Red Oxide Primer" },
+  { value: "OTHER", label: "Other" },
+];
+
+export const YES_NO_OPTIONS = [
+  { value: "yes", label: "Yes" },
+  { value: "no", label: "No" },
+];
