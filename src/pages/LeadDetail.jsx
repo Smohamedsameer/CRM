@@ -72,7 +72,7 @@ export default function LeadDetail() {
   }
 
   const e = lead.enquiry;
-  const enquiryRows = e
+  const baseRows = e
     ? [
         ["Building type", e.buildingType === "OTHER" ? e.buildingTypeOther : labelize(e.buildingType)],
         ["No. of sheds", e.noOfSheds],
@@ -93,6 +93,28 @@ export default function LeadDetail() {
         ["Remarks", e.remarks],
       ].filter(([, value]) => value)
     : [];
+
+  let extra = {};
+  try { extra = e?.extraDetails ? JSON.parse(e.extraDetails) : {}; } catch { extra = {}; }
+  const yn = (v, parts = []) => (v === "yes" ? (parts.filter(Boolean).join(", ") || "Yes") : v === "no" ? "No" : null);
+  const extraRows = [
+    ["Crane size", extra.craneSize],
+    ["Roof ventilator", yn(extra.roofVent, [extra.roofVentThroat && `throat ${extra.roofVentThroat}`, extra.roofVentAch && `${extra.roofVentAch} air change/hr`, extra.roofVentQty && `${extra.roofVentQty} nos`])],
+    ["Ridge vent", yn(extra.ridgeVent, [extra.ridgeVentSize && `size ${extra.ridgeVentSize}`, extra.ridgeVentQty && `${extra.ridgeVentQty} nos`])],
+    ["Eave gutter", yn(extra.eaveGutter)],
+    ["Valley gutter", yn(extra.valleyGutter)],
+    ["Gutter material", extra.gutterMaterial === "OTHER" ? extra.gutterMaterialOther : labelize(extra.gutterMaterial)],
+    ["Downtake pipes", extra.downpipeMaterial === "OTHER" ? extra.downpipeMaterialOther : extra.downpipeMaterial],
+    ["Canopy", yn(extra.canopy, [extra.canopySize && `size ${extra.canopySize}`, extra.canopyHeightFfl && `height from FFL ${extra.canopyHeightFfl}`])],
+    ["Sheet metal louver", yn(extra.louver, [extra.louverSize && `size ${extra.louverSize}`])],
+    ["Trailer / truck access", yn(extra.truckAccess)],
+    ["Goods stocking places", extra.stockingPlaces],
+    ["Shutter / door / window details", extra.openingsDetails],
+    ["Project period", extra.projectPeriod],
+    ["Other comments & queries", extra.otherComments],
+    ["Details given by", [extra.givenByName, extra.givenByDesignation, extra.givenByAddress].filter(Boolean).join(" — ")],
+  ].filter(([, value]) => value);
+  const enquiryRows = [...baseRows, ...extraRows];
 
   return (
     <div className="container">

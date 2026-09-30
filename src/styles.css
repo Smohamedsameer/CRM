@@ -177,10 +177,10 @@ textarea { min-height: 90px; resize: vertical; }
   cursor: pointer; background: #fff; font-weight: 400; margin: 0; transition: border-color .15s, box-shadow .15s;
 }
 .image-radio-card:hover { border-color: #c9c9c9; }
-.image-radio-card.selected { border-color: #2f6fed; box-shadow: 0 0 0 2px rgba(47,111,237,0.15); }
+.image-radio-card.selected { border-color: #c9a227; box-shadow: 0 0 0 3px rgba(201,162,39,0.28); }
 .image-radio-card input { position: absolute; opacity: 0; width: 1px; height: 1px; }
-.image-radio-icon { display: flex; align-items: center; justify-content: center; height: 56px; width: 100%; }
-.image-radio-photo { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+.image-radio-icon { display: flex; align-items: center; justify-content: center; min-height: 56px; width: 100%; }
+.image-radio-photo { max-width: 100%; max-height: 110px; object-fit: contain; display: block; }
 .image-radio-label { font-size: 13px; text-align: center; line-height: 1.25; }
 .checkbox-options { display: flex; flex-wrap: wrap; gap: 8px 20px; }
 .checkbox-option { display: flex; align-items: center; gap: 6px; font-weight: 400; font-size: 15px; width: auto; margin: 0; }
@@ -475,3 +475,14 @@ tbody tr:hover { background: rgba(255, 255, 255, 0.02); }
 .dash-footer-dev { font-size: 12px; letter-spacing: 0.03em; }
 .dash-footer-dev span { color: var(--primary); font-weight: 600; }
 .dash-footer span { color: var(--primary); font-weight: 600; }
+/* ---------- Picture + Yes/No cards (gold border when selected) ---------- */
+.photo-choice-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin-bottom: 16px; }
+.photo-choice { border: 1.5px solid #e2e2e2; border-radius: 10px; background: #fff; overflow: hidden; margin-bottom: 16px; transition: border-color .15s, box-shadow .15s; }
+.photo-choice.selected { border-color: #c9a227; box-shadow: 0 0 0 3px rgba(201,162,39,0.28); }
+.photo-choice-img { cursor: pointer; display: flex; justify-content: center; align-items: center; background: #fafafa; min-height: 90px; }
+.photo-choice-img img { max-width: 100%; max-height: 200px; object-fit: contain; display: block; }
+.photo-choice-body { padding: 10px 12px 12px; }
+.photo-choice-body .row { margin-top: 8px; }
+.photo-missing { font-size: 12px; color: #9aa0a6; padding: 24px 8px; text-align: center; }
+.diagram-img { width: 100%; max-width: 520px; display: block; margin: 0 auto 16px; }
+.diagram-img img { width: 100%; display: block; }

@@ -1,4 +1,15 @@
+import Photo from "./Photo.jsx";
+
 const ROOF = "#b3491f";
+
+/** Roofing & cladding pictures: put the files in public/diagrams/ (roof-only, roof-gable-end,
+ * roof-gable-walls, roof-full-cladding — or roof1..roof4). Falls back to the line-art icon. */
+const ROOF_DIAGRAMS = {
+  ROOF_ONLY: ["roof-only", "roof1"],
+  ROOF_AND_GABLE_END: ["roof-gable-end", "roof2"],
+  ROOF_GABLE_END_AND_WALLS: ["roof-gable-walls", "roof3"],
+  FULL_ROOF_GABLE_END_AND_CLADDING: ["roof-full-cladding", "roof4"],
+};
 
 /** Real product photos for each "Type of Building" option, served from /public/building-types/
  * (plain URL paths, not bundled imports, so they can be swapped without a rebuild). */
@@ -18,10 +29,14 @@ const BUILDING_PHOTOS = {
 /** Icon for a PEB building-type or roofing/cladding option. Building-type values render the
  * company's real elevation photos (from /public/building-types/); roofing/cladding requirement
  * values and "Other" render a small line-art placeholder since no matching photo exists for those. */
-export default function BuildingIcon({ type, size = 64 }) {
+export default function BuildingIcon({ type, size = 64, noDiagram = false }) {
   const photo = BUILDING_PHOTOS[type];
   if (photo) {
     return <img src={photo} alt="" className="image-radio-photo" />;
+  }
+
+  if (ROOF_DIAGRAMS[type] && !noDiagram) {
+    return <Photo name={ROOF_DIAGRAMS[type]} className="image-radio-photo" fallback={<BuildingIcon type={type} size={size} noDiagram />} />;
   }
 
   const props = { width: size, height: size * 0.68, viewBox: "0 0 100 68", xmlns: "http://www.w3.org/2000/svg" };

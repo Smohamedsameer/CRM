@@ -6,10 +6,13 @@ import RadioGroup from "../components/RadioGroup.jsx";
 import ImageRadioGroup from "../components/ImageRadioGroup.jsx";
 import CheckboxGroup from "../components/CheckboxGroup.jsx";
 import PolicyFooter from "../components/PolicyFooter.jsx";
+import Photo from "../components/Photo.jsx";
+import PhotoChoice from "../components/PhotoChoice.jsx";
 import {
   BUILDING_TYPES, CLADDING_MATERIALS, COLUMN_TYPES, END_FRAME_TYPES, SCOPE_OF_WORK_OPTIONS,
   MEASUREMENT_BASIS_OPTIONS, ROOFING_CLADDING_REQUIREMENTS, MAIN_SHED_ROOF_MATERIALS,
   SURFACE_PREPARATION_OPTIONS, PROTECTIVE_COATING_OPTIONS, YES_NO_OPTIONS,
+  GUTTER_MATERIALS, DOWNPIPE_MATERIALS,
 } from "../utils/constants.js";
 
 const EMPTY = {
@@ -37,11 +40,27 @@ const EMPTY = {
   specifications: "", additionalRequirements: "", remarks: "",
 };
 
+// New sections (ventilation, water-down, canopy, louver, road facilities, project period, sign-off).
+// Saved together as JSON in enquiries.extra_details.
+const EXTRA0 = {
+  craneSize: "",
+  roofVent: "", roofVentThroat: "", roofVentAch: "", roofVentQty: "",
+  ridgeVent: "", ridgeVentSize: "", ridgeVentQty: "",
+  eaveGutter: "", valleyGutter: "", gutterMaterial: "", gutterMaterialOther: "",
+  downpipeMaterial: "", downpipeMaterialOther: "",
+  canopy: "", canopySize: "", canopyHeightFfl: "",
+  louver: "", louverSize: "",
+  truckAccess: "", stockingPlaces: "", openingsDetails: "",
+  projectPeriod: "", otherComments: "",
+  givenByName: "", givenByDesignation: "", givenByAddress: "", signSeal: "",
+};
+
 /** Customer-facing enquiry form, matching the company's PEB request form. Reached via /enquiry/:token */
 export default function Enquiry() {
   const { token } = useParams();
   const [customer, setCustomer] = useState(null);
   const [form, setForm] = useState(EMPTY);
+  const [x, setX0] = useState(EXTRA0);
   const [loadError, setLoadError] = useState("");
   const [submitError, setSubmitError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -59,6 +78,33 @@ export default function Enquiry() {
     setForm((f) => ({ ...f, [field]: value }));
   }
 
+  function setX(field, value) {
+    setX0((p) => ({ ...p, [field]: value }));
+  }
+
+  // text input bound to the extra-details state
+  const T = (k, label, props = {}) => (
+    <div className="field" key={k}>
+      <label htmlFor={k}>{label}</label>
+      <input id={k} value={x[k]} onChange={(e) => setX(k, e.target.value)} {...props} />
+    </div>
+  );
+  const TA = (k, label) => (
+    <div className="field">
+      <label htmlFor={k}>{label}</label>
+      <textarea id={k} value={x[k]} onChange={(e) => setX(k, e.target.value)} />
+    </div>
+  );
+
+  function handleSeal(e) {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    if (f.size > 300 * 1024) { setSubmitError("Sign & seal image must be under 300 KB."); return; }
+    const r = new FileReader();
+    r.onload = () => setX("signSeal", r.result);
+    r.readAsDataURL(f);
+  }
+
   function handleChange(e) {
     set(e.target.name, e.target.value);
   }
@@ -72,6 +118,8 @@ export default function Enquiry() {
       await submitEnquiry({
         token,
         ...form,
+        requirement: form.requirement || "PEB building enquiry",
+        extraDetails: JSON.stringify(x),
         spanWidthM: form.spanWidthM ? Number(form.spanWidthM) : null,
         lengthM: form.lengthM ? Number(form.lengthM) : null,
         clearEaveHeightM: form.clearEaveHeightM ? Number(form.clearEaveHeightM) : null,
@@ -82,7 +130,7 @@ export default function Enquiry() {
         surfacePreparation: form.surfacePreparation.join(","),
         craneRequired: form.craneRequired === "" ? null : form.craneRequired === "yes",
         skylightRequired: form.skylightRequired === "" ? null : form.skylightRequired === "yes",
-        roofVentilatorRequired: form.roofVentilatorRequired === "" ? null : form.roofVentilatorRequired === "yes",
+        roofVentilatorRequired: x.roofVent === "yes" || x.ridgeVent === "yes" ? true : (x.roofVent || x.ridgeVent ? false : null),
         requiredDate: form.requiredDate ? `${form.requiredDate}T00:00:00` : null,
       });
       setDone(true);
@@ -173,6 +221,9 @@ export default function Enquiry() {
                 <input id="eaveHeightM" name="eaveHeightM" type="number" step="0.01" min="0" value={form.eaveHeightM} onChange={handleChange} />
               </div>
             </div>
+            <div className="diagram-img">
+              <Photo name={["bay-width", "bay", "bay-image"]} alt="Bay width / bay spacing diagram" />
+            </div>
             <div className="row">
               <div className="field">
                 <label htmlFor="intermediateBaySpacingM">Intermediate Bay Spacing (metres)</label>
@@ -240,31 +291,90 @@ export default function Enquiry() {
             <hr />
             <h3>5. Additional Requirements</h3>
             <RadioGroup legend="Skylight Required" name="skylightRequired" options={YES_NO_OPTIONS} value={form.skylightRequired} onChange={(v) => set("skylightRequired", v)} required />
-            <RadioGroup legend="Roof Ventilator Required" name="roofVentilatorRequired" options={YES_NO_OPTIONS} value={form.roofVentilatorRequired} onChange={(v) => set("roofVentilatorRequired", v)} required />
-            <RadioGroup
-              legend="Crane and Hoist"
-              name="craneRequired"
-              options={[{ value: "yes", label: "Applicable" }, { value: "no", label: "Not Applicable" }]}
-              value={form.craneRequired}
-              onChange={(v) => set("craneRequired", v)}
-              required
-            />
-            {craneYes && (
+            <PhotoChoice name="craneRequired" image="crane" title="Crane and Hoist" value={form.craneRequired} onChange={(v) => set("craneRequired", v)}>
+              <div className="row">
+                <div className="field">
+                  <label htmlFor="craneCapacityTonnes">Capacity (tonnes)</label>
+                  <input id="craneCapacityTonnes" name="craneCapacityTonnes" value={form.craneCapacityTonnes} onChange={handleChange} />
+                </div>
+                {T("craneSize", "Size")}
+              </div>
               <div className="row">
                 <div className="field">
                   <label htmlFor="craneType">Crane type</label>
                   <input id="craneType" name="craneType" value={form.craneType} onChange={handleChange} />
                 </div>
                 <div className="field">
-                  <label htmlFor="craneCapacityTonnes">Capacity (tonnes)</label>
-                  <input id="craneCapacityTonnes" name="craneCapacityTonnes" value={form.craneCapacityTonnes} onChange={handleChange} />
-                </div>
-                <div className="field">
                   <label htmlFor="craneHeightM">Height, floor to hook (metres)</label>
                   <input id="craneHeightM" name="craneHeightM" value={form.craneHeightM} onChange={handleChange} />
                 </div>
               </div>
-            )}
+            </PhotoChoice>
+
+            <hr />
+            <h3>6. Ventilation System</h3>
+            <div className="photo-choice-grid">
+              <PhotoChoice name="roofVent" image="wind1" title="a) Roof ventilator" value={x.roofVent} onChange={(v) => setX("roofVent", v)}>
+                {T("roofVentThroat", "Diameter of throat")}
+                {T("roofVentAch", "Air change / Hr")}
+                {T("roofVentQty", "Quantity (nos)", { type: "number", min: 0 })}
+              </PhotoChoice>
+              <PhotoChoice name="ridgeVent" image="wind2" title="b) Ridge vent" value={x.ridgeVent} onChange={(v) => setX("ridgeVent", v)}>
+                {T("ridgeVentSize", "Size")}
+                {T("ridgeVentQty", "Quantity (nos)", { type: "number", min: 0 })}
+              </PhotoChoice>
+            </div>
+
+            <hr />
+            <h3>7. Water Down System</h3>
+            <p className="muted">1) Gutter</p>
+            <div className="photo-choice-grid">
+              <PhotoChoice name="eaveGutter" image="gutter1" title="a) Eave gutter" value={x.eaveGutter} onChange={(v) => setX("eaveGutter", v)} />
+              <PhotoChoice name="valleyGutter" image="gutter2" title="b) Valley gutter" value={x.valleyGutter} onChange={(v) => setX("valleyGutter", v)} />
+            </div>
+            <RadioGroup legend="2) Material" name="gutterMaterial" options={GUTTER_MATERIALS} value={x.gutterMaterial} onChange={(v) => setX("gutterMaterial", v)} />
+            {x.gutterMaterial === "OTHER" && T("gutterMaterialOther", "Others – specify")}
+            <RadioGroup legend="3) Downtake pipes – material (please tick)" name="downpipeMaterial" options={DOWNPIPE_MATERIALS} value={x.downpipeMaterial} onChange={(v) => setX("downpipeMaterial", v)} />
+            {x.downpipeMaterial === "OTHER" && T("downpipeMaterialOther", "Others – specify")}
+
+            <hr />
+            <h3>8. Canopy</h3>
+            <PhotoChoice name="canopy" image={["slab", "slap"]} title="Canopy (please tick)" value={x.canopy} onChange={(v) => setX("canopy", v)}>
+              <div className="row">
+                {T("canopySize", "Size (o/o)")}
+                {T("canopyHeightFfl", "Height from FFL")}
+              </div>
+            </PhotoChoice>
+
+            <hr />
+            <h3>9. Sheet Metal Louver</h3>
+            <PhotoChoice name="louver" image="window" title="Sheet metal louver (please tick)" value={x.louver} onChange={(v) => setX("louver", v)}>
+              {T("louverSize", "Size (o/o)")}
+            </PhotoChoice>
+
+            <hr />
+            <h3>10. Road Facilities</h3>
+            <RadioGroup legend="Whether suitable for Trailer / Truck moving" name="truckAccess" options={YES_NO_OPTIONS} value={x.truckAccess} onChange={(v) => setX("truckAccess", v)} />
+            {TA("stockingPlaces", "Goods stocking places available – details")}
+            {TA("openingsDetails", "Provision of rolling shutter / sliding door / windows in building & side cladding structure (please specify the details)")}
+
+            <hr />
+            <h3>11. Project Period</h3>
+            {T("projectPeriod", "Project period")}
+            {TA("otherComments", "Any other detail, comments & queries")}
+
+            <hr />
+            <h3>12. Above details given by</h3>
+            <div className="row">
+              {T("givenByName", "Name")}
+              {T("givenByDesignation", "Designation")}
+            </div>
+            {TA("givenByAddress", "Address")}
+            <div className="field">
+              <label htmlFor="signSeal">Sign & seal of company (image, optional)</label>
+              <input id="signSeal" type="file" accept="image/*" onChange={handleSeal} />
+              {x.signSeal && <img src={x.signSeal} alt="Sign and seal" style={{ maxHeight: 80, marginTop: 6 }} />}
+            </div>
 
             <hr />
             {/* <h3>6. Scope of work</h3>

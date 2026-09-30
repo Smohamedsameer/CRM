@@ -122,3 +122,15 @@ export const YES_NO_OPTIONS = [
   { value: "yes", label: "Yes" },
   { value: "no", label: "No" },
 ];
+
+export const GUTTER_MATERIALS = [
+  { value: "PPGI", label: "PPGI" },
+  { value: "CCGL", label: "CCGL" },
+  { value: "BAREGALVALUME", label: "Bare Galvalume" },
+  { value: "OTHER", label: "Others" },
+];
+
+export const DOWNPIPE_MATERIALS = [
+  { value: "PVC", label: "PVC" },
+  { value: "OTHER", label: "Others" },
+];
