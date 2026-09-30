@@ -413,7 +413,7 @@ export default function Enquiry() {
             </div>
 
             <hr />
-            {/* <h3>6. Scope of work</h3>
+            <h3>6. Scope of work</h3>
             <RadioGroup legend="You require us to quote for" name="scopeOfWork" options={SCOPE_OF_WORK_OPTIONS} value={form.scopeOfWork} onChange={(v) => set("scopeOfWork", v)} required />
             {(form.scopeOfWork === "SUPPLY_AT_SITE" || form.scopeOfWork === "OTHER") && (
               <div className="field">
@@ -427,7 +427,7 @@ export default function Enquiry() {
             <div className="field">
               <label htmlFor="requirement">Requirement / purpose of building *</label>
               <textarea id="requirement" name="requirement" required placeholder="Describe what you need" value={form.requirement} onChange={handleChange} />
-            </div> */}
+            </div>
             <div className="row">
               <div className="field">
                 <label htmlFor="location">Site location</label>
@@ -446,14 +446,14 @@ export default function Enquiry() {
               <label htmlFor="remarks">Any other detail, comments &amp; queries</label>
               <textarea id="remarks" name="remarks" value={form.remarks} onChange={handleChange} />
             </div>
-            {/* <div className="field">
+            <div className="field">
               <label htmlFor="specifications">Other specifications</label>
               <textarea id="specifications" name="specifications" placeholder="Insulation, gutters, canopy, road access, etc." value={form.specifications} onChange={handleChange} />
             </div>
             <div className="field">
               <label htmlFor="additionalRequirements">Additional requirements</label>
               <textarea id="additionalRequirements" name="additionalRequirements" value={form.additionalRequirements} onChange={handleChange} />
-            </div> */}
+            </div>
 
             <hr />
             <h3>Above detail given by</h3>
