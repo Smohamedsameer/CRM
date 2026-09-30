@@ -122,27 +122,3 @@ export const YES_NO_OPTIONS = [
   { value: "yes", label: "Yes" },
   { value: "no", label: "No" },
 ];
-
-export const ROOF_STYLE_OPTIONS = [
-  { value: "ROOF_STYLE_1", label: "Style 1", image: "/diagrams/roof-style-1.png" },
-  { value: "ROOF_STYLE_2", label: "Style 2", image: "/diagrams/roof-style-2.png" },
-  { value: "ROOF_STYLE_3", label: "Style 3", image: "/diagrams/roof-style-3.png" },
-  { value: "ROOF_STYLE_4", label: "Style 4", image: "/diagrams/roof-style-4.png" },
-];
-
-export const GUTTER_TYPE_OPTIONS = [
-  { value: "EAVE_GUTTER", label: "Eave Gutter", image: "/diagrams/eave-gutter.png" },
-  { value: "VALLEY_GUTTER", label: "Valley Gutter", image: "/diagrams/valley-gutter.png" },
-];
-
-export const GUTTER_MATERIAL_OPTIONS = [
-  { value: "PPGI", label: "PPGI" },
-  { value: "CCGL", label: "CCGL" },
-  { value: "BAREGALVALUME", label: "Bare Galvalume" },
-  { value: "OTHER", label: "Others" },
-];
-
-export const DOWNTAKE_PIPE_MATERIAL_OPTIONS = [
-  { value: "PVC", label: "PVC" },
-  { value: "OTHER", label: "Others" },
-];
