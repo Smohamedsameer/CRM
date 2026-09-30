@@ -143,7 +143,7 @@ export default function Enquiry() {
   const craneYes = form.craneRequired === "yes";
 
   return (
-    <div className="container">
+    <div className="container enquiry-page light-theme">
       <div className="card">
         <h2>Request form for PEB</h2>
         <p className="muted">A few details about your building so we can prepare an accurate quotation.</p>
