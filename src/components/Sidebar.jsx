@@ -1,6 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext.jsx";
-import { AddLeadIcon, ClientRequestIcon, DashboardIcon, DocumentsIcon, LogoutIcon, NotificationIcon, SettingsIcon } from "./Icons.jsx";
+import { AddLeadIcon, ClientRequestIcon, DashboardIcon, DocumentsIcon, LogoutIcon, NotificationIcon, QuotationIcon, SettingsIcon } from "./Icons.jsx";
 
 /**
  * Left-hand navigation. On desktop it's a fixed column under the top bar (logout is in the top bar,
@@ -25,6 +25,14 @@ export default function Sidebar({ open, onClose }) {
           <NavLink to="/client-requests" className="sidebar-link">
             <ClientRequestIcon /> <span>Client Request</span>
           </NavLink>
+          <a
+            href="https://se-quotation.vercel.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="sidebar-link"
+          >
+            <QuotationIcon /> <span>Quotation Manually</span>
+          </a>
           <NavLink to="/documents" className="sidebar-link">
             <DocumentsIcon /> <span>Certificates &amp; Documents</span>
           </NavLink>
