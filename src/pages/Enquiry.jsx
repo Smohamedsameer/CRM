@@ -329,7 +329,7 @@ export default function Enquiry() {
             <h3>7. Water Down System</h3>
             <p className="muted">1) Gutter</p>
             <div className="photo-choice-grid">
-              <PhotoChoice name="eaveGutter" image="gutter1" title="a) Eave gutter" value={x.eaveGutter} onChange={(v) => setX("eaveGutter", v)} />
+              <PhotoChoice name="eaveGutter" image="gutter3" title="a) Eave gutter" value={x.eaveGutter} onChange={(v) => setX("eaveGutter", v)} />
               <PhotoChoice name="valleyGutter" image="gutter2" title="b) Valley gutter" value={x.valleyGutter} onChange={(v) => setX("valleyGutter", v)} />
             </div>
             <RadioGroup legend="2) Material" name="gutterMaterial" options={GUTTER_MATERIALS} value={x.gutterMaterial} onChange={(v) => setX("gutterMaterial", v)} />
