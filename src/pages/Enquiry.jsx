@@ -314,7 +314,7 @@ export default function Enquiry() {
             <hr />
             <h3>6. Ventilation System</h3>
             <div className="photo-choice-grid">
-              <PhotoChoice name="roofVent" image="wind1" title="a) Roof ventilator" value={x.roofVent} onChange={(v) => setX("roofVent", v)}>
+              <PhotoChoice name="roofVent" image="wind3" title="a) Roof ventilator" value={x.roofVent} onChange={(v) => setX("roofVent", v)}>
                 {T("roofVentThroat", "Diameter of throat")}
                 {T("roofVentAch", "Air change / Hr")}
                 {T("roofVentQty", "Quantity (nos)", { type: "number", min: 0 })}
