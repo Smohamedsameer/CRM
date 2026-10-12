@@ -190,19 +190,19 @@ export default function Enquiry() {
             </div>
             <div className="row">
               {T("eaveHeight", "Eave Height ( mention mtr / ft )", { dim: true, required: true })}
-              {T("clearEaveHeight", "Clear Eave Height ( mention mtr / ft )", { dim: true, required: true })}
+              {T("clearEaveHeight", "Clear Eave Height ( mention mtr / ft )", { dim: true, required: false })}
             </div>
 
             <hr />
             <h3>Intermediate Column Spacing Lengthwise</h3>
             <img className="gf-ref" src="/diagrams/bay-width.png" alt="Intermediate column / bay spacing diagram" />
             <div className="row">
-              {T("intermediateSpacing", "Intermediate Column Spacing ( mention mtr / ft )", { dim: true, required: true })}
-              {T("gableBaySpacing", "Gable End Bay Column Spacing ( mention mtr / ft )", { dim: true, required: true })}
+              {T("intermediateSpacing", "Intermediate Column Spacing ( mention mtr / ft )", { dim: true, required: false })}
+              {T("gableBaySpacing", "Gable End Bay Column Spacing ( mention mtr / ft )", { dim: true, required: false })}
             </div>
             <div className="row">
-              {T("brickWallHeight", "Brick Wall Height ( mention mtr / ft )", { dim: true, required: true })}
-              {T("roofSlope", "Roof Slope", { required: true, placeholder: "e.g. 1 in 10" })}
+              {T("brickWallHeight", "Brick Wall Height ( mention mtr / ft ,if not required mention 0)", { dim: true, required: true })}
+              {T("roofSlope", "Roof Slope", { required: false, placeholder: "e.g. 1 in 10" })}
             </div>
 
             <hr />
@@ -214,12 +214,12 @@ export default function Enquiry() {
             <RadioGroup legend="Building Cladding Material" name="claddingMaterial" options={GF_SHEET_MATERIALS} value={f.claddingMaterial} onChange={(v) => set("claddingMaterial", v)} required />
             {Other("claddingMaterialOther", "claddingMaterial")}
             <div className="row">
-              {T("thickness", "Roof / Cladding Sheet Thickness (Mention mm)", { required: true })}
-              {T("colour", "Roof / Cladding Sheet Colour (RAL Code)", { required: true })}
+              {T("thickness", "Roof / Cladding Sheet Thickness (Mention mm)", { required: false })}
+              {T("colour", "Roof / Cladding Sheet Colour (RAL Code)", { required: false })}
             </div>
-            <RadioGroup legend="Surface Preparation" name="surfacePrep" options={GF_SURFACE_PREPARATION} value={f.surfacePrep[0] || ""} onChange={one("surfacePrep")} required />
+            <RadioGroup legend="Surface Preparation" name="surfacePrep" options={GF_SURFACE_PREPARATION} value={f.surfacePrep[0] || ""} onChange={one("surfacePrep")}  />
             {has(f.surfacePrep, "OTHER") && T("surfacePrepOther", "Other – please specify", { required: true })}
-            <RadioGroup legend="Protective Coating (Primer / Finishing Paint)" name="coating" options={GF_PROTECTIVE_COATING} value={f.coating} onChange={(v) => set("coating", v)} required />
+            <RadioGroup legend="Protective Coating (Primer / Finishing Paint)" name="coating" options={GF_PROTECTIVE_COATING} value={f.coating} onChange={(v) => set("coating", v)}  />
             {Other("coatingOther", "coating")}
 
             <hr />
@@ -240,9 +240,9 @@ export default function Enquiry() {
               value={f.gutter[0] || ""} onChange={one("gutter")} required />
             {gutterOn && (
               <>
-                <RadioGroup legend="Gutter Material" name="gutterMaterial" options={GF_GUTTER_MATERIALS} value={f.gutterMaterial} onChange={(v) => set("gutterMaterial", v)} required />
+                <RadioGroup legend="Gutter Material" name="gutterMaterial" options={GF_GUTTER_MATERIALS} value={f.gutterMaterial} onChange={(v) => set("gutterMaterial", v)}  />
                 {Other("gutterMaterialOther", "gutterMaterial")}
-                <RadioGroup legend="Downpipe Material" name="downpipeMaterial" options={GF_DOWNPIPE_MATERIALS} value={f.downpipeMaterial} onChange={(v) => set("downpipeMaterial", v)} required />
+                <RadioGroup legend="Downpipe Material" name="downpipeMaterial" options={GF_DOWNPIPE_MATERIALS} value={f.downpipeMaterial} onChange={(v) => set("downpipeMaterial", v)}  />
                 {Other("downpipeMaterialOther", "downpipeMaterial")}
               </>
             )}
@@ -251,8 +251,8 @@ export default function Enquiry() {
               <PhotoChoice name="canopy" image={["slab", "slap"]} title="Canopy Required?" required withOther value={f.canopy} onChange={(v) => set("canopy", v)}>
                 {f.canopy === "other" ? T("canopyOther", "Please specify", { required: true }) : (
                   <div className="row">
-                    {T("canopySize", "Canopy Size ( width * length )", { required: true })}
-                    {T("canopyHeightFfl", "Canopy Height from FFL ( mtr / ft )", { dim: true, required: true })}
+                    {T("canopySize", "Canopy Size ( width * length )", { required: false })}
+                    {T("canopyHeightFfl", "Canopy Height from FFL ( mtr / ft )", { dim: true, required: false })}
                   </div>
                 )}
               </PhotoChoice>
