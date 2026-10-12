@@ -26,7 +26,7 @@ export default function Sidebar({ open, onClose }) {
             <ClientRequestIcon /> <span>Client Request</span>
           </NavLink>
           <a
-            href="https://se-quotation.vercel.app/"
+            href="https://quotation-senela.vercel.app/"
             target="_blank"
             rel="noopener noreferrer"
             className="sidebar-link"

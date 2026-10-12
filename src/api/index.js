@@ -1,4 +1,4 @@
-import { request, apiUrl, openAuthedPdf } from "./client.js";
+import { request, apiUrl, openAuthedPdf, sessionStorageHelper } from "./client.js";
 
 // ---- Employee (JWT) ----------------------------------------------------
 export const login = (email, password) =>
@@ -20,6 +20,17 @@ export const resendWelcome = (id) => request(`/api/leads/${id}/resend-welcome`, 
 /** payload: { items: [{ description, quantity, unitPrice }], discount?, taxPercentage? } */
 export const generateQuotation = (leadId, payload = {}) =>
   request(`/api/quotations/generate/${leadId}`, { method: "POST", body: payload, auth: true });
+/** Replaces the quotation's stored PDF (the 8-page PEB format built in the browser). */
+export async function uploadQuotationPdf(id, blob) {
+  const session = sessionStorageHelper.read();
+  const res = await fetch(apiUrl(`/api/quotations/${id}/pdf`), {
+    method: "POST",
+    headers: { "Content-Type": "application/pdf", ...(session ? { Authorization: `Bearer ${session.token}` } : {}) },
+    body: blob,
+  });
+  if (!res.ok) throw new Error(res.status === 401 ? "Session expired - please sign in again." : "Could not save the quotation PDF (" + res.status + ").");
+  return res.json();
+}
 export const sendQuotation = (id) => request(`/api/quotations/${id}/send`, { method: "POST", auth: true });
 /** Opens a sent (or generated) quotation's PDF in a new tab, for admin review - works for any status. */
 export const viewQuotationPdf = (id) => openAuthedPdf(`/api/quotations/${id}/pdf`);

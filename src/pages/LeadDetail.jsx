@@ -8,6 +8,7 @@ import QuoteBuilder from "../components/QuoteBuilder.jsx";
 import StatusBadge from "../components/StatusBadge.jsx";
 import { TIMELINE_LABELS, TIMELINE_ORDER } from "../utils/constants.js";
 import { formatDateTime, labelize, money } from "../utils/format.js";
+import { gfLabel } from "../utils/constants.js";
 
 const EXTRA_STATUSES = ["CHANGES_REQUESTED", "REJECTED", "CLOSED"];
 
@@ -114,7 +115,39 @@ export default function LeadDetail() {
     ["Other comments & queries", extra.otherComments],
     ["Details given by", [extra.givenByName, extra.givenByDesignation, extra.givenByAddress].filter(Boolean).join(" — ")],
   ].filter(([, value]) => value);
-  const enquiryRows = [...baseRows, ...extraRows];
+  // rows for the Google-form style enquiry (answers kept exactly as the customer typed them)
+  const pick = (v, other) => (v === "OTHER" ? other : gfLabel(v));
+  const list = (arr, other) => (arr || []).map((v) => pick(v, other)).filter(Boolean).join(", ");
+  const v2Rows = extra.v === 2 ? [
+    ["Project location", extra.projectLocation],
+    ["Type of building", pick(extra.buildingType, extra.buildingTypeOther)],
+    ["Column type", pick(extra.columnType, extra.columnTypeOther)],
+    ["End frame type", pick(extra.endFrameType, extra.endFrameTypeOther)],
+    ["Span / building width", extra.spanWidth],
+    ["Length", extra.length],
+    ["Eave height", extra.eaveHeight],
+    ["Clear eave height", extra.clearEaveHeight],
+    ["Intermediate column spacing", extra.intermediateSpacing],
+    ["Gable end bay column spacing", extra.gableBaySpacing],
+    ["Brick wall height", extra.brickWallHeight],
+    ["Roof slope", extra.roofSlope],
+    ["Roofing / cladding requirement", pick(extra.roofingReq, extra.roofingReqOther)],
+    ["Roof material", pick(extra.roofMaterial, extra.roofMaterialOther)],
+    ["Cladding material", pick(extra.claddingMaterial, extra.claddingMaterialOther)],
+    ["Sheet thickness (mm)", extra.thickness],
+    ["Sheet colour (RAL)", extra.colour],
+    ["Surface preparation", list(extra.surfacePrep, extra.surfacePrepOther)],
+    ["Protective coating", pick(extra.coating, extra.coatingOther)],
+    ["Crane required", extra.craneRequired === "yes" ? [extra.craneType, extra.craneCapacity && `${extra.craneCapacity} T`, extra.craneHeight && `lifting height ${extra.craneHeight}`].filter(Boolean).join(", ") || "Yes" : extra.craneRequired === "no" ? "No" : extra.craneRequiredOther],
+    ["Roof ventilator", list(extra.roofVentilatorChoices, extra.roofVentOther)],
+    ["Gutter", list(extra.gutterChoices, extra.gutterOther)],
+    ["Gutter material", pick(extra.gutterMaterial, extra.gutterMaterialOther)],
+    ["Downpipe material", pick(extra.downpipeMaterial, extra.downpipeMaterialOther)],
+    ["Canopy", extra.canopy === "yes" ? [extra.canopySize && `size ${extra.canopySize}`, extra.canopyHeightFfl && `height from FFL ${extra.canopyHeightFfl}`].filter(Boolean).join(", ") || "Yes" : extra.canopy === "no" ? "No" : extra.canopyOther],
+    ["Louver", extra.louver === "yes" ? (extra.louverSize ? `size ${extra.louverSize}` : "Yes") : extra.louver === "no" ? "No" : extra.louverOther],
+    ["Project starting proposal date", extra.startDate],
+  ].filter(([, value]) => value) : [];
+  const enquiryRows = extra.v === 2 ? v2Rows : [...baseRows, ...extraRows];
 
   return (
     <div className="container">
@@ -127,6 +160,8 @@ export default function LeadDetail() {
           <tbody>
             <tr><td>Customer</td><td>{lead.customerName}</td></tr>
             <tr><td>Company</td><td>{lead.companyName || "-"}</td></tr>
+            <tr><td>Project name</td><td>{lead.projectName || "-"}</td></tr>
+            <tr><td>Address</td><td style={{ whiteSpace: "pre-line" }}>{lead.address || "-"}</td></tr>
             <tr><td>Phone</td><td>{lead.phone}</td></tr>
             <tr><td>Email</td><td>{lead.email || "-"}</td></tr>
             <tr><td>Square feet</td><td>{lead.squareFeet || "-"}</td></tr>
@@ -159,9 +194,9 @@ export default function LeadDetail() {
           <QuoteBuilder
             lead={lead}
             onCancel={() => setShowQuoteBuilder(false)}
-            onGenerated={() => {
+            onGenerated={(_q, text, type = "success") => {
               setShowQuoteBuilder(false);
-              setNotice({ type: "success", text: "Quotation generated. Send it to the customer from the Quotations list below." });
+              setNotice({ type, text: text || "Quotation generated. Send it to the customer from the Quotations list below." });
               load();
             }}
           />
@@ -275,19 +310,26 @@ export default function LeadDetail() {
               </thead>
               <tbody>
                 {lead.whatsAppMessages.map((m) => (
-                  <tr key={m.id}>
-                    <td>{labelize(m.type)}</td>
-                    <td><StatusBadge status={m.deliveryStatus} /></td>
-                    <td>{formatDateTime(m.sentAt)}</td>
-                    <td>
-                      {m.deliveryStatus === "FAILED" && (
-                        <button type="button" className="btn btn-secondary" disabled={!!busy}
-                          onClick={() => run(`retry-${m.id}`, () => retryMessage(m.id), "Message resent.")}>
-                          {busy === `retry-${m.id}` ? "Retrying…" : "Retry"}
-                        </button>
-                      )}
-                    </td>
-                  </tr>
+                  <Fragment key={m.id}>
+                    <tr>
+                      <td>{labelize(m.type)}</td>
+                      <td><StatusBadge status={m.deliveryStatus} /></td>
+                      <td>{formatDateTime(m.sentAt)}</td>
+                      <td>
+                        {m.deliveryStatus === "FAILED" && (
+                          <button type="button" className="btn btn-secondary" disabled={!!busy}
+                            onClick={() => run(`retry-${m.id}`, () => retryMessage(m.id), "Message resent.")}>
+                            {busy === `retry-${m.id}` ? "Retrying…" : "Retry"}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                    {m.deliveryStatus === "FAILED" && m.errorMessage && (
+                      <tr className="change-request-row">
+                        <td colSpan={4}><p>{m.errorMessage}</p></td>
+                      </tr>
+                    )}
+                  </Fragment>
                 ))}
               </tbody>
             </table>

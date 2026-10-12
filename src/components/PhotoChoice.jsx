@@ -1,25 +1,28 @@
 import Photo from "./Photo.jsx";
 
-/** Picture card with a Yes / No choice. Gold border when "Yes" is selected; `children` (the follow-up
- * questions) are shown only when Yes. Clicking the picture toggles Yes/No. */
-export default function PhotoChoice({ name, image, title, value, onChange, children }) {
+const YES_NO = [["yes", "Yes"], ["no", "No"]];
+
+/** Picture card with a Yes / No choice (or Yes / No / Other when `withOther`). Gold border when "Yes" is
+ * selected; `children` (the follow-up questions) are shown for Yes (and Other). Clicking the picture toggles Yes/No. */
+export default function PhotoChoice({ name, image, title, value, onChange, children, withOther = false, required = false }) {
   const yes = value === "yes";
+  const options = withOther ? [...YES_NO, ["other", "Other"]] : YES_NO;
   return (
     <div className={"photo-choice" + (yes ? " selected" : "")}>
       <div className="photo-choice-img" onClick={() => onChange(yes ? "no" : "yes")}>
         <Photo name={image} alt={title} />
       </div>
       <div className="photo-choice-body">
-        <strong>{title}</strong>
+        <strong>{title}{required ? " *" : ""}</strong>
         <div className="radio-options">
-          {[["yes", "Yes"], ["no", "No"]].map(([v, l]) => (
+          {options.map(([v, l]) => (
             <label key={v} className="radio-option">
-              <input type="radio" name={name} value={v} checked={value === v} onChange={() => onChange(v)} />
+              <input type="radio" name={name} value={v} checked={value === v} onChange={() => onChange(v)} required={required} />
               <span>{l}</span>
             </label>
           ))}
         </div>
-        {yes && children}
+        {(yes || (withOther && value === "other")) && children}
       </div>
     </div>
   );

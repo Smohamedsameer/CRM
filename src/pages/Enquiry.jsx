@@ -3,64 +3,60 @@ import { useParams } from "react-router-dom";
 import { getEnquiryPrefill, submitEnquiry } from "../api/index.js";
 import Alert from "../components/Alert.jsx";
 import RadioGroup from "../components/RadioGroup.jsx";
-import ImageRadioGroup from "../components/ImageRadioGroup.jsx";
-import CheckboxGroup from "../components/CheckboxGroup.jsx";
-import PolicyFooter from "../components/PolicyFooter.jsx";
-import Photo from "../components/Photo.jsx";
+import OptionCards from "../components/OptionCards.jsx";
 import PhotoChoice from "../components/PhotoChoice.jsx";
+import PolicyFooter from "../components/PolicyFooter.jsx";
 import {
-  BUILDING_TYPES, CLADDING_MATERIALS, COLUMN_TYPES, END_FRAME_TYPES, SCOPE_OF_WORK_OPTIONS,
-  MEASUREMENT_BASIS_OPTIONS, ROOFING_CLADDING_REQUIREMENTS, MAIN_SHED_ROOF_MATERIALS,
-  SURFACE_PREPARATION_OPTIONS, PROTECTIVE_COATING_OPTIONS, YES_NO_OPTIONS,
-  GUTTER_MATERIALS, DOWNPIPE_MATERIALS,
+  GF_BUILDING_TYPES, GF_COLUMN_TYPES, GF_END_FRAME_TYPES, GF_ROOFING_REQUIREMENTS, GF_SHEET_MATERIALS,
+  GF_SURFACE_PREPARATION, GF_PROTECTIVE_COATING, GF_ROOF_VENTILATORS, GF_GUTTERS, GF_GUTTER_MATERIALS,
+  GF_DOWNPIPE_MATERIALS,
 } from "../utils/constants.js";
 
+/** Everything the customer answers (the Google Form "Senela International Ventures - PEB Enquiry Form"). */
 const EMPTY = {
-  // Building
-  buildingType: "", buildingTypeOther: "", noOfSheds: "",
-  endFrameType: "", columnType: "",
-  // Dimensions (metres)
-  spanWidthM: "", widthMeasurementBasis: "",
-  lengthM: "", lengthMeasurementBasis: "",
-  clearEaveHeightM: "", eaveHeightM: "",
-  intermediateBaySpacingM: "", endBaySpacingM: "", brickWallHeightM: "", roofSlope: "",
-  // Roofing & cladding
-  roofingCladdingRequirement: "", mainShedRoofMaterial: "", mainShedRoofMaterialOther: "",
-  roofCladdingThickness: "", roofCladdingColour: "",
-  sideCladdingMaterial: "", sideCladdingThickness: "", sideCladdingColour: "",
-  // Finishing
-  surfacePreparation: [], protectiveCoating: "", protectiveCoatingOther: "",
-  // Additional requirements
-  skylightRequired: "", roofVentilatorRequired: "",
-  craneRequired: "", craneType: "", craneCapacityTonnes: "", craneHeightM: "",
-  // Scope
-  scopeOfWork: "", scopeOfWorkLocation: "",
-  // General (kept from the original enquiry form, for anything not covered above)
-  requirement: "", location: "", requiredDate: "",
-  specifications: "", additionalRequirements: "", remarks: "",
+  projectLocation: "",
+  // 1. Building type
+  buildingType: "", buildingTypeOther: "", columnType: "", columnTypeOther: "", endFrameType: "", endFrameTypeOther: "",
+  // Building dimensions (free text: "mention mtr / ft")
+  spanWidth: "", eaveHeight: "", clearEaveHeight: "", length: "",
+  intermediateSpacing: "", gableBaySpacing: "", brickWallHeight: "", roofSlope: "",
+  // 3. Roofing and cladding
+  roofingReq: "", roofingReqOther: "", roofMaterial: "", roofMaterialOther: "", claddingMaterial: "", claddingMaterialOther: "",
+  thickness: "", colour: "", surfacePrep: [], surfacePrepOther: "", coating: "", coatingOther: "",
+  // 5. Crane
+  craneRequired: "", craneRequiredOther: "", craneType: "", craneCapacity: "", craneHeight: "",
+  // Roof ventilator / gutter (choose any)
+  roofVent: [], roofVentOther: "", gutter: [], gutterOther: "", gutterMaterial: "", gutterMaterialOther: "", downpipeMaterial: "", downpipeMaterialOther: "",
+  // Canopy / louver
+  canopy: "", canopyOther: "", canopySize: "", canopyHeightFfl: "", louver: "", louverOther: "", louverSize: "",
+  // 10. Project starting
+  startDate: "",
 };
 
-// New sections (ventilation, water-down, canopy, louver, road facilities, project period, sign-off).
-// Saved together as JSON in enquiries.extra_details.
-const EXTRA0 = {
-  craneSize: "",
-  roofVent: "", roofVentThroat: "", roofVentAch: "", roofVentQty: "",
-  ridgeVent: "", ridgeVentSize: "", ridgeVentQty: "",
-  eaveGutter: "", valleyGutter: "", gutterMaterial: "", gutterMaterialOther: "",
-  downpipeMaterial: "", downpipeMaterialOther: "",
-  canopy: "", canopySize: "", canopyHeightFfl: "",
-  louver: "", louverSize: "",
-  truckAccess: "", stockingPlaces: "", openingsDetails: "",
-  projectPeriod: "", otherComments: "",
-  givenByName: "", givenByDesignation: "", givenByAddress: "", signSeal: "",
-};
+/** "12 mtr" / "40 ft" / "12.5" -> metres (or null). Only used for the legacy numeric columns; the exact text is kept too. */
+function toMetres(text) {
+  const m = String(text || "").match(/\d+(?:\.\d+)?/);
+  if (!m) return null;
+  const n = parseFloat(m[0]);
+  return /ft|feet|foot|'/i.test(text) ? Math.round(n * 0.3048 * 100) / 100 : n;
+}
+const has = (list, v) => list.includes(v);
 
-/** Customer-facing enquiry form, matching the company's PEB request form. Reached via /enquiry/:token */
+/** length fields must look like "20 mtr" or "20 ft" (number + unit) */
+const DIM_RE = /^\s*\d+(?:\.\d+)?\s*(?:mtrs?|meters?|metres?|m|ft|feet|foot)\s*$/i;
+const DIM_EXAMPLE = "20 mtr / 20 ft";
+const dimInvalid = (v) => String(v || "").trim() !== "" && !DIM_RE.test(v);
+const DIM_FIELDS = [
+  ["spanWidth", "Span / building Width"], ["length", "Length"], ["eaveHeight", "Eave Height"],
+  ["clearEaveHeight", "Clear Eave Height"], ["intermediateSpacing", "Intermediate Column Spacing"],
+  ["gableBaySpacing", "Gable End Bay Column Spacing"], ["brickWallHeight", "Brick Wall Height"],
+  ["craneHeight", "Crane Lifting Height"], ["canopyHeightFfl", "Canopy Height from FFL"],
+];
+
 export default function Enquiry() {
   const { token } = useParams();
   const [customer, setCustomer] = useState(null);
-  const [form, setForm] = useState(EMPTY);
-  const [x, setX0] = useState(EXTRA0);
+  const [f, setF] = useState(EMPTY);
   const [loadError, setLoadError] = useState("");
   const [submitError, setSubmitError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -74,64 +70,72 @@ export default function Enquiry() {
     return () => { cancelled = true; };
   }, [token]);
 
-  function set(field, value) {
-    setForm((f) => ({ ...f, [field]: value }));
-  }
-
-  function setX(field, value) {
-    setX0((p) => ({ ...p, [field]: value }));
-  }
-
-  // text input bound to the extra-details state
-  const T = (k, label, props = {}) => (
-    <div className="field" key={k}>
-      <label htmlFor={k}>{label}</label>
-      <input id={k} value={x[k]} onChange={(e) => setX(k, e.target.value)} {...props} />
-    </div>
-  );
-  const TA = (k, label) => (
-    <div className="field">
-      <label htmlFor={k}>{label}</label>
-      <textarea id={k} value={x[k]} onChange={(e) => setX(k, e.target.value)} />
-    </div>
-  );
-
-  function handleSeal(e) {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    if (f.size > 300 * 1024) { setSubmitError("Sign & seal image must be under 300 KB."); return; }
-    const r = new FileReader();
-    r.onload = () => setX("signSeal", r.result);
-    r.readAsDataURL(f);
-  }
-
-  function handleChange(e) {
-    set(e.target.name, e.target.value);
-  }
+  const set = (k, v) => setF((p) => ({ ...p, [k]: v }));
+  const T = (k, label, props = {}) => {
+    const { dim, ...inp } = props;
+    const bad = dim && dimInvalid(f[k]);
+    return (
+      <div className="field" key={k}>
+        <label htmlFor={k}>{label}{props.required ? " *" : ""}</label>
+        <input id={k} value={f[k]} onChange={(e) => set(k, e.target.value)} placeholder={dim ? "e.g. " + DIM_EXAMPLE : undefined}
+          aria-invalid={bad || undefined} style={bad ? { borderColor: "#c0392b" } : undefined} {...inp} />
+        {bad && <p className="field-error">Please enter a value with its unit, for example: {DIM_EXAMPLE}</p>}
+      </div>
+    );
+  };
+  const Other = (k, parent) => f[parent] === "OTHER" && T(k, "Other – please specify", { required: true });
+  const one = (k) => (v) => set(k, v ? [v] : []); // single-choice question stored as a one-item list (keeps the saved format)
+  const roofVentOn = f.roofVent.length > 0 && !has(f.roofVent, "NOT_REQUIRED");
+  const gutterOn = f.gutter.length > 0 && !has(f.gutter, "NOT_REQUIRED");
 
   async function handleSubmit(e) {
     e.preventDefault();
     if (submitting) return;
+    const badDim = DIM_FIELDS.find(([k]) => dimInvalid(f[k]));
+    if (badDim) {
+      document.getElementById(badDim[0])?.focus();
+      return setSubmitError(`${badDim[1]}: please enter a number with its unit, for example ${DIM_EXAMPLE}.`);
+    }
+    if (!f.surfacePrep.length) return setSubmitError("Please choose a Surface Preparation option.");
+    if (!f.roofVent.length) return setSubmitError("Please choose a Roof Ventilator option (or Not Required).");
+    if (!f.gutter.length) return setSubmitError("Please choose a Gutter option (or Not Required).");
     setSubmitError("");
     setSubmitting(true);
+    // everything the customer typed/picked, exactly as entered, plus the key names the older screens read
+    const extra = {
+      v: 2, ...f,
+      roofVentilatorChoices: f.roofVent, gutterChoices: f.gutter,
+      roofVent: has(f.roofVent, "TURBINE_VENTILATOR") ? "yes" : (f.roofVent.length ? "no" : ""),
+      ridgeVent: has(f.roofVent, "RIDGE_VENT") ? "yes" : (f.roofVent.length ? "no" : ""),
+      eaveGutter: has(f.gutter, "EAVE_GUTTER") ? "yes" : (f.gutter.length ? "no" : ""),
+      valleyGutter: has(f.gutter, "VALLEY_GUTTER") ? "yes" : (f.gutter.length ? "no" : ""),
+      gutterMaterial: f.gutterMaterial, gutterMaterialOther: f.gutterMaterialOther,
+      downpipeMaterial: f.downpipeMaterial, downpipeMaterialOther: f.downpipeMaterialOther,
+      canopy: f.canopy, louver: f.louver, projectPeriod: f.startDate,
+    };
     try {
       await submitEnquiry({
         token,
-        ...form,
-        requirement: form.requirement || "PEB building enquiry",
-        extraDetails: JSON.stringify(x),
-        spanWidthM: form.spanWidthM ? Number(form.spanWidthM) : null,
-        lengthM: form.lengthM ? Number(form.lengthM) : null,
-        clearEaveHeightM: form.clearEaveHeightM ? Number(form.clearEaveHeightM) : null,
-        eaveHeightM: form.eaveHeightM ? Number(form.eaveHeightM) : null,
-        intermediateBaySpacingM: form.intermediateBaySpacingM ? Number(form.intermediateBaySpacingM) : null,
-        endBaySpacingM: form.endBaySpacingM ? Number(form.endBaySpacingM) : null,
-        brickWallHeightM: form.brickWallHeightM ? Number(form.brickWallHeightM) : null,
-        surfacePreparation: form.surfacePreparation.join(","),
-        craneRequired: form.craneRequired === "" ? null : form.craneRequired === "yes",
-        skylightRequired: form.skylightRequired === "" ? null : form.skylightRequired === "yes",
-        roofVentilatorRequired: x.roofVent === "yes" || x.ridgeVent === "yes" ? true : (x.roofVent || x.ridgeVent ? false : null),
-        requiredDate: form.requiredDate ? `${form.requiredDate}T00:00:00` : null,
+        requirement: "PEB building enquiry",
+        location: f.projectLocation,
+        requiredDate: f.startDate ? `${f.startDate}T00:00:00` : null,
+        buildingType: f.buildingType, buildingTypeOther: f.buildingTypeOther,
+        endFrameType: f.endFrameType, columnType: f.columnType,
+        spanWidthM: toMetres(f.spanWidth), lengthM: toMetres(f.length),
+        clearEaveHeightM: toMetres(f.clearEaveHeight), eaveHeightM: toMetres(f.eaveHeight),
+        intermediateBaySpacingM: toMetres(f.intermediateSpacing), endBaySpacingM: toMetres(f.gableBaySpacing),
+        brickWallHeightM: toMetres(f.brickWallHeight), roofSlope: f.roofSlope,
+        roofingCladdingRequirement: f.roofingReq,
+        mainShedRoofMaterial: f.roofMaterial, mainShedRoofMaterialOther: f.roofMaterialOther,
+        roofCladdingMaterial: f.roofMaterial, sideCladdingMaterial: f.claddingMaterial,
+        roofCladdingThickness: f.thickness, sideCladdingThickness: f.thickness,
+        roofCladdingColour: f.colour, sideCladdingColour: f.colour,
+        surfacePreparation: f.surfacePrep.join(","),
+        protectiveCoating: f.coating, protectiveCoatingOther: f.coatingOther,
+        craneRequired: f.craneRequired === "" ? null : f.craneRequired === "yes",
+        craneType: f.craneType, craneCapacityTonnes: f.craneCapacity, craneHeightM: f.craneHeight,
+        roofVentilatorRequired: roofVentOn,
+        extraDetails: JSON.stringify(extra),
       });
       setDone(true);
     } catch (err) {
@@ -140,280 +144,129 @@ export default function Enquiry() {
     }
   }
 
-  const craneYes = form.craneRequired === "yes";
+  const craneYes = f.craneRequired === "yes";
+  const ro = (value) => <input disabled value={value ?? ""} />;
 
   return (
     <div className="container enquiry-page light-theme">
       <div className="card">
-        <h2>Request form for PEB</h2>
-        <p className="muted">A few details about your building so we can prepare an accurate quotation.</p>
+        <h2>Senela International Ventures - PEB Enquiry Form</h2>
+        <p className="muted">Please provide the building details below so we can prepare an accurate PEB quotation.</p>
 
         <Alert>{loadError}</Alert>
-        <Alert type="success">
-          {done ? "Thank you! Your enquiry has been received. We'll send your quotation on WhatsApp shortly." : ""}
-        </Alert>
+        <Alert type="success">{done ? "Thank you! Your enquiry has been received. We will contact you shortly." : ""}</Alert>
 
         {!loadError && !done && (
           <form onSubmit={handleSubmit}>
-            <div className="row">
-              <div className="field">
-                <label htmlFor="c-name">Name</label>
-                <input id="c-name" disabled value={customer?.customerName ?? ""} />
-              </div>
-              <div className="field">
-                <label htmlFor="c-company">Company</label>
-                <input id="c-company" disabled value={customer?.companyName ?? ""} />
-              </div>
-            </div>
-            <div className="row">
-              <div className="field">
-                <label htmlFor="c-phone">Phone</label>
-                <input id="c-phone" disabled value={customer?.phone ?? ""} />
-              </div>
-              <div className="field">
-                <label htmlFor="c-email">Email</label>
-                <input id="c-email" disabled value={customer?.email ?? ""} />
-              </div>
-            </div>
-
-            <hr />
-            <h3>1. Building Type and Configuration</h3>
-            <ImageRadioGroup legend="Type of Building" name="buildingType" options={BUILDING_TYPES} value={form.buildingType} onChange={(v) => set("buildingType", v)} required />
-            {form.buildingType === "OTHER" && (
-              <div className="field">
-                <label htmlFor="buildingTypeOther">Please specify</label>
-                <input id="buildingTypeOther" name="buildingTypeOther" value={form.buildingTypeOther} onChange={handleChange} />
-              </div>
-            )}
-            <div className="field">
-              <label htmlFor="noOfSheds">No. of sheds</label>
-              <input id="noOfSheds" name="noOfSheds" value={form.noOfSheds} onChange={handleChange} />
-            </div>
-            <RadioGroup legend="Type of End Frame" name="endFrameType" options={END_FRAME_TYPES} value={form.endFrameType} onChange={(v) => set("endFrameType", v)} required />
-            <RadioGroup legend="Column Type" name="columnType" options={COLUMN_TYPES} value={form.columnType} onChange={(v) => set("columnType", v)} />
-
-            <hr />
-            <h3>2. Building Dimensions</h3>
-            <img
-              src="/diagrams/building-dimensions.png"
-              alt="Diagram showing span/building width, eave height, clear eave height and building height"
-              style={{ width: "100%", maxWidth: 520, display: "block", margin: "0 auto 16px" }}
-            />
-            <div className="row">
-              <div className="field">
-                <label htmlFor="spanWidthM">Span / Width (metres)</label>
-                <input id="spanWidthM" name="spanWidthM" type="number" step="0.01" min="0" value={form.spanWidthM} onChange={handleChange} />
-              </div>
-              <div className="field">
-                <label htmlFor="lengthM">Building Length (metres)</label>
-                <input id="lengthM" name="lengthM" type="number" step="0.01" min="0" value={form.lengthM} onChange={handleChange} />
-              </div>
-            </div>
-            <RadioGroup legend="Width Measurement Basis" name="widthMeasurementBasis" options={MEASUREMENT_BASIS_OPTIONS} value={form.widthMeasurementBasis} onChange={(v) => set("widthMeasurementBasis", v)} />
-            <RadioGroup legend="Length Measurement Basis" name="lengthMeasurementBasis" options={MEASUREMENT_BASIS_OPTIONS} value={form.lengthMeasurementBasis} onChange={(v) => set("lengthMeasurementBasis", v)} />
-            <div className="row">
-              <div className="field">
-                <label htmlFor="clearEaveHeightM">Clear Eave Height (metres)</label>
-                <input id="clearEaveHeightM" name="clearEaveHeightM" type="number" step="0.01" min="0" value={form.clearEaveHeightM} onChange={handleChange} />
-              </div>
-              <div className="field">
-                <label htmlFor="eaveHeightM">Eave Height (metres)</label>
-                <input id="eaveHeightM" name="eaveHeightM" type="number" step="0.01" min="0" value={form.eaveHeightM} onChange={handleChange} />
-              </div>
-            </div>
-            <div className="diagram-img">
-              <Photo name={["bay-width", "bay", "bay-image"]} alt="Bay width / bay spacing diagram" />
-            </div>
-            <div className="row">
-              <div className="field">
-                <label htmlFor="intermediateBaySpacingM">Intermediate Bay Spacing (metres)</label>
-                <input id="intermediateBaySpacingM" name="intermediateBaySpacingM" type="number" step="0.01" min="0" value={form.intermediateBaySpacingM} onChange={handleChange} />
-              </div>
-              <div className="field">
-                <label htmlFor="endBaySpacingM">End Bay Spacing (metres)</label>
-                <input id="endBaySpacingM" name="endBaySpacingM" type="number" step="0.01" min="0" value={form.endBaySpacingM} onChange={handleChange} />
-              </div>
-            </div>
-            <div className="row">
-              <div className="field">
-                <label htmlFor="brickWallHeightM">Brick Wall Height (metres)</label>
-                <input id="brickWallHeightM" name="brickWallHeightM" type="number" step="0.01" min="0" value={form.brickWallHeightM} onChange={handleChange} />
-              </div>
-              <div className="field">
-                <label htmlFor="roofSlope">Roof Slope</label>
-                <input id="roofSlope" name="roofSlope" placeholder="e.g. 1 in 10" value={form.roofSlope} onChange={handleChange} />
-              </div>
-            </div>
-
-            <hr />
-            <h3>3. Roofing and Cladding</h3>
-            <ImageRadioGroup legend="Roofing and Side Cladding Requirement" name="roofingCladdingRequirement" options={ROOFING_CLADDING_REQUIREMENTS} value={form.roofingCladdingRequirement} onChange={(v) => set("roofingCladdingRequirement", v)} required />
-            <RadioGroup legend="Main Shed Roof Material" name="mainShedRoofMaterial" options={MAIN_SHED_ROOF_MATERIALS} value={form.mainShedRoofMaterial} onChange={(v) => set("mainShedRoofMaterial", v)} required />
-            {form.mainShedRoofMaterial === "OTHER" && (
-              <div className="field">
-                <label htmlFor="mainShedRoofMaterialOther">Please specify</label>
-                <input id="mainShedRoofMaterialOther" name="mainShedRoofMaterialOther" value={form.mainShedRoofMaterialOther} onChange={handleChange} />
-              </div>
-            )}
-            <div className="row">
-              <div className="field">
-                <label htmlFor="roofCladdingThickness">Roof Cladding Thickness</label>
-                <input id="roofCladdingThickness" name="roofCladdingThickness" value={form.roofCladdingThickness} onChange={handleChange} />
-              </div>
-              <div className="field">
-                <label htmlFor="roofCladdingColour">Roof Cladding Colour</label>
-                <input id="roofCladdingColour" name="roofCladdingColour" value={form.roofCladdingColour} onChange={handleChange} />
-              </div>
-            </div>
-            <RadioGroup legend="Side Cladding Material" name="sideCladdingMaterial" options={CLADDING_MATERIALS} value={form.sideCladdingMaterial} onChange={(v) => set("sideCladdingMaterial", v)} />
-            <div className="row">
-              <div className="field">
-                <label htmlFor="sideCladdingThickness">Side Cladding Thickness</label>
-                <input id="sideCladdingThickness" name="sideCladdingThickness" value={form.sideCladdingThickness} onChange={handleChange} />
-              </div>
-              <div className="field">
-                <label htmlFor="sideCladdingColour">Side Cladding Colour</label>
-                <input id="sideCladdingColour" name="sideCladdingColour" value={form.sideCladdingColour} onChange={handleChange} />
-              </div>
-            </div>
-
-            <hr />
-            <h3>4. Finishing Requirements</h3>
-            <CheckboxGroup legend="Surface Preparation" options={SURFACE_PREPARATION_OPTIONS} values={form.surfacePreparation} onChange={(v) => set("surfacePreparation", v)} required />
-            <RadioGroup legend="Protective Coating" name="protectiveCoating" options={PROTECTIVE_COATING_OPTIONS} value={form.protectiveCoating} onChange={(v) => set("protectiveCoating", v)} required />
-            {form.protectiveCoating === "OTHER" && (
-              <div className="field">
-                <label htmlFor="protectiveCoatingOther">Please specify</label>
-                <input id="protectiveCoatingOther" name="protectiveCoatingOther" value={form.protectiveCoatingOther} onChange={handleChange} />
-              </div>
-            )}
-
-            <hr />
-            <h3>5. Additional Requirements</h3>
-            <RadioGroup legend="Skylight Required" name="skylightRequired" options={YES_NO_OPTIONS} value={form.skylightRequired} onChange={(v) => set("skylightRequired", v)} required />
-            <PhotoChoice name="craneRequired" image="crane" title="Crane and Hoist" value={form.craneRequired} onChange={(v) => set("craneRequired", v)}>
+            <h3>Personal Information</h3>
+            <div className="gf-prefill">
               <div className="row">
-                <div className="field">
-                  <label htmlFor="craneCapacityTonnes">Capacity (tonnes)</label>
-                  <input id="craneCapacityTonnes" name="craneCapacityTonnes" value={form.craneCapacityTonnes} onChange={handleChange} />
-                </div>
-                {T("craneSize", "Size")}
+                <div className="field"><label>Person Name</label>{ro(customer?.customerName)}</div>
+                <div className="field"><label>Company Name</label>{ro(customer?.companyName)}</div>
               </div>
               <div className="row">
-                <div className="field">
-                  <label htmlFor="craneType">Crane type</label>
-                  <input id="craneType" name="craneType" value={form.craneType} onChange={handleChange} />
-                </div>
-                <div className="field">
-                  <label htmlFor="craneHeightM">Height, floor to hook (metres)</label>
-                  <input id="craneHeightM" name="craneHeightM" value={form.craneHeightM} onChange={handleChange} />
-                </div>
+                <div className="field"><label>Phone number</label>{ro(customer?.phone)}</div>
+                <div className="field"><label>Email ID</label>{ro(customer?.email)}</div>
               </div>
+              <div className="field"><label>Company Address</label><textarea disabled value={customer?.address ?? ""} style={{ minHeight: 60 }} /></div>
+            </div>
+            {T("projectLocation", "Project Location", { required: true })}
+
+            <hr />
+            <h3>1. Building Type</h3>
+            <OptionCards legend="Type of Building" name="buildingType" options={GF_BUILDING_TYPES} value={f.buildingType}
+              onChange={(v) => set("buildingType", v)} otherValue={f.buildingTypeOther} onOther={(v) => set("buildingTypeOther", v)} required />
+            <RadioGroup legend="Column Type" name="columnType" options={GF_COLUMN_TYPES} value={f.columnType} onChange={(v) => set("columnType", v)} required />
+            {Other("columnTypeOther", "columnType")}
+            <RadioGroup legend="End Frame Type" name="endFrameType" options={GF_END_FRAME_TYPES} value={f.endFrameType} onChange={(v) => set("endFrameType", v)} required />
+            {Other("endFrameTypeOther", "endFrameType")}
+
+            <hr />
+            <h3>Building Dimensions</h3>
+            <img className="gf-ref" src="/diagrams/building-dimensions.png" alt="Span / building width, eave height, clear eave height and building height" />
+            <div className="row">
+              {T("spanWidth", "Span / building Width ( mention mtr / ft )", { dim: true, required: true })}
+              {T("length", "Length ( mention mtr / ft )", { dim: true, required: true })}
+            </div>
+            <div className="row">
+              {T("eaveHeight", "Eave Height ( mention mtr / ft )", { dim: true, required: true })}
+              {T("clearEaveHeight", "Clear Eave Height ( mention mtr / ft )", { dim: true, required: true })}
+            </div>
+
+            <hr />
+            <h3>Intermediate Column Spacing Lengthwise</h3>
+            <img className="gf-ref" src="/diagrams/bay-width.png" alt="Intermediate column / bay spacing diagram" />
+            <div className="row">
+              {T("intermediateSpacing", "Intermediate Column Spacing ( mention mtr / ft )", { dim: true, required: true })}
+              {T("gableBaySpacing", "Gable End Bay Column Spacing ( mention mtr / ft )", { dim: true, required: true })}
+            </div>
+            <div className="row">
+              {T("brickWallHeight", "Brick Wall Height ( mention mtr / ft )", { dim: true, required: true })}
+              {T("roofSlope", "Roof Slope", { required: true, placeholder: "e.g. 1 in 10" })}
+            </div>
+
+            <hr />
+            <h3>3. Roofing and Cladding Covering Area</h3>
+            <OptionCards legend="Roofing / Cladding Requirement" name="roofingReq" options={GF_ROOFING_REQUIREMENTS} value={f.roofingReq}
+              onChange={(v) => set("roofingReq", v)} otherValue={f.roofingReqOther} onOther={(v) => set("roofingReqOther", v)} required />
+            <RadioGroup legend="Building Roof Material" name="roofMaterial" options={GF_SHEET_MATERIALS} value={f.roofMaterial} onChange={(v) => set("roofMaterial", v)} required />
+            {Other("roofMaterialOther", "roofMaterial")}
+            <RadioGroup legend="Building Cladding Material" name="claddingMaterial" options={GF_SHEET_MATERIALS} value={f.claddingMaterial} onChange={(v) => set("claddingMaterial", v)} required />
+            {Other("claddingMaterialOther", "claddingMaterial")}
+            <div className="row">
+              {T("thickness", "Roof / Cladding Sheet Thickness (Mention mm)", { required: true })}
+              {T("colour", "Roof / Cladding Sheet Colour (RAL Code)", { required: true })}
+            </div>
+            <RadioGroup legend="Surface Preparation" name="surfacePrep" options={GF_SURFACE_PREPARATION} value={f.surfacePrep[0] || ""} onChange={one("surfacePrep")} required />
+            {has(f.surfacePrep, "OTHER") && T("surfacePrepOther", "Other – please specify", { required: true })}
+            <RadioGroup legend="Protective Coating (Primer / Finishing Paint)" name="coating" options={GF_PROTECTIVE_COATING} value={f.coating} onChange={(v) => set("coating", v)} required />
+            {Other("coatingOther", "coating")}
+
+            <hr />
+            <h3>5. Crane Requirements</h3>
+            <PhotoChoice name="craneRequired" image="crane" title="Crane Required?" required withOther value={f.craneRequired} onChange={(v) => set("craneRequired", v)}>
+              {f.craneRequired === "other" ? T("craneRequiredOther", "Please specify", { required: true }) : (
+                <>
+                  <div className="row">{T("craneType", "Crane Type", { required: craneYes })}{T("craneCapacity", "Crane Capacity (Tonnes)", { required: craneYes })}</div>
+                  <div className="row">{T("craneHeight", "Crane Lifting Height ( mention mtr / ft )", { dim: true, required: craneYes })}</div>
+                </>
+              )}
             </PhotoChoice>
 
-            <hr />
-            <h3>6. Ventilation System</h3>
+            <OptionCards legend="Roof Ventilator Required?" name="roofVent" options={GF_ROOF_VENTILATORS}
+              value={f.roofVent[0] || ""} onChange={one("roofVent")} required />
+
+            <OptionCards legend="Gutter Required?" name="gutter" options={GF_GUTTERS}
+              value={f.gutter[0] || ""} onChange={one("gutter")} required />
+            {gutterOn && (
+              <>
+                <RadioGroup legend="Gutter Material" name="gutterMaterial" options={GF_GUTTER_MATERIALS} value={f.gutterMaterial} onChange={(v) => set("gutterMaterial", v)} required />
+                {Other("gutterMaterialOther", "gutterMaterial")}
+                <RadioGroup legend="Downpipe Material" name="downpipeMaterial" options={GF_DOWNPIPE_MATERIALS} value={f.downpipeMaterial} onChange={(v) => set("downpipeMaterial", v)} required />
+                {Other("downpipeMaterialOther", "downpipeMaterial")}
+              </>
+            )}
+
             <div className="photo-choice-grid">
-              <PhotoChoice name="roofVent" image="wind3" title="a) Roof ventilator" value={x.roofVent} onChange={(v) => setX("roofVent", v)}>
-                {T("roofVentThroat", "Diameter of throat")}
-                {T("roofVentAch", "Air change / Hr")}
-                {T("roofVentQty", "Quantity (nos)", { type: "number", min: 0 })}
+              <PhotoChoice name="canopy" image={["slab", "slap"]} title="Canopy Required?" required withOther value={f.canopy} onChange={(v) => set("canopy", v)}>
+                {f.canopy === "other" ? T("canopyOther", "Please specify", { required: true }) : (
+                  <div className="row">
+                    {T("canopySize", "Canopy Size ( width * length )", { required: true })}
+                    {T("canopyHeightFfl", "Canopy Height from FFL ( mtr / ft )", { dim: true, required: true })}
+                  </div>
+                )}
               </PhotoChoice>
-              <PhotoChoice name="ridgeVent" image="wind2" title="b) Ridge vent" value={x.ridgeVent} onChange={(v) => setX("ridgeVent", v)}>
-                {T("ridgeVentSize", "Size")}
-                {T("ridgeVentQty", "Quantity (nos)", { type: "number", min: 0 })}
+              <PhotoChoice name="louver" image="window" title="Louver Required? (Sheet Metal Louver)" required withOther value={f.louver} onChange={(v) => set("louver", v)}>
+                {f.louver === "other" ? T("louverOther", "Please specify", { required: true }) : T("louverSize", "Louver Size ( width * length )", { required: true })}
               </PhotoChoice>
             </div>
 
             <hr />
-            <h3>7. Water Down System</h3>
-            <p className="muted">1) Gutter</p>
-            <div className="photo-choice-grid">
-              <PhotoChoice name="eaveGutter" image="gutter3" title="a) Eave gutter" value={x.eaveGutter} onChange={(v) => setX("eaveGutter", v)} />
-              <PhotoChoice name="valleyGutter" image="gutter2" title="b) Valley gutter" value={x.valleyGutter} onChange={(v) => setX("valleyGutter", v)} />
+            <h3>10. Project Starting Duration Status</h3>
+            <div className="field" style={{ maxWidth: 280 }}>
+              <label htmlFor="startDate">Project Starting Proposal Date *</label>
+              <input id="startDate" type="date" required value={f.startDate} onChange={(e) => set("startDate", e.target.value)} />
             </div>
-            <RadioGroup legend="2) Material" name="gutterMaterial" options={GUTTER_MATERIALS} value={x.gutterMaterial} onChange={(v) => setX("gutterMaterial", v)} />
-            {x.gutterMaterial === "OTHER" && T("gutterMaterialOther", "Others – specify")}
-            <RadioGroup legend="3) Downtake pipes – material (please tick)" name="downpipeMaterial" options={DOWNPIPE_MATERIALS} value={x.downpipeMaterial} onChange={(v) => setX("downpipeMaterial", v)} />
-            {x.downpipeMaterial === "OTHER" && T("downpipeMaterialOther", "Others – specify")}
-
-            <hr />
-            <h3>8. Canopy</h3>
-            <PhotoChoice name="canopy" image={["slab", "slap"]} title="Canopy (please tick)" value={x.canopy} onChange={(v) => setX("canopy", v)}>
-              <div className="row">
-                {T("canopySize", "Size (o/o)")}
-                {T("canopyHeightFfl", "Height from FFL")}
-              </div>
-            </PhotoChoice>
-
-            <hr />
-            <h3>9. Sheet Metal Louver</h3>
-            <PhotoChoice name="louver" image="window" title="Sheet metal louver (please tick)" value={x.louver} onChange={(v) => setX("louver", v)}>
-              {T("louverSize", "Size (o/o)")}
-            </PhotoChoice>
-
-            <hr />
-            <h3>10. Road Facilities</h3>
-            <RadioGroup legend="Whether suitable for Trailer / Truck moving" name="truckAccess" options={YES_NO_OPTIONS} value={x.truckAccess} onChange={(v) => setX("truckAccess", v)} />
-            {TA("stockingPlaces", "Goods stocking places available – details")}
-            {TA("openingsDetails", "Provision of rolling shutter / sliding door / windows in building & side cladding structure (please specify the details)")}
-
-            <hr />
-            <h3>11. Project Period</h3>
-            {T("projectPeriod", "Project period")}
-            {TA("otherComments", "Any other detail, comments & queries")}
-
-            <hr />
-            <h3>12. Above details given by</h3>
-            <div className="row">
-              {T("givenByName", "Name")}
-              {T("givenByDesignation", "Designation")}
-            </div>
-            {TA("givenByAddress", "Address")}
-            <div className="field">
-              <label htmlFor="signSeal">Sign & seal of company (image, optional)</label>
-              <input id="signSeal" type="file" accept="image/*" onChange={handleSeal} />
-              {x.signSeal && <img src={x.signSeal} alt="Sign and seal" style={{ maxHeight: 80, marginTop: 6 }} />}
-            </div>
-
-            <hr />
-            {/* <h3>6. Scope of work</h3>
-            <RadioGroup legend="You require us to quote for" name="scopeOfWork" options={SCOPE_OF_WORK_OPTIONS} value={form.scopeOfWork} onChange={(v) => set("scopeOfWork", v)} required />
-            {(form.scopeOfWork === "SUPPLY_AT_SITE" || form.scopeOfWork === "OTHER") && (
-              <div className="field">
-                <label htmlFor="scopeOfWorkLocation">{form.scopeOfWork === "OTHER" ? "Please specify" : "Site location"}</label>
-                <input id="scopeOfWorkLocation" name="scopeOfWorkLocation" value={form.scopeOfWorkLocation} onChange={handleChange} />
-              </div>
-            )}
-
-            <hr />
-            <h3>7. Anything else</h3>
-            <div className="field">
-              <label htmlFor="requirement">Requirement / purpose of building *</label>
-              <textarea id="requirement" name="requirement" required placeholder="Describe what you need" value={form.requirement} onChange={handleChange} />
-            </div> */}
-            <div className="row">
-              <div className="field">
-                <label htmlFor="location">Site location</label>
-                <input id="location" name="location" value={form.location} onChange={handleChange} />
-              </div>
-              <div className="field">
-                <label htmlFor="requiredDate">Offer required by</label>
-                <input id="requiredDate" name="requiredDate" type="date" value={form.requiredDate} onChange={handleChange} />
-              </div>
-            </div>
-            {/* <div className="field">
-              <label htmlFor="specifications">Other specifications</label>
-              <textarea id="specifications" name="specifications" placeholder="Insulation, gutters, canopy, road access, etc." value={form.specifications} onChange={handleChange} />
-            </div>
-            <div className="field">
-              <label htmlFor="additionalRequirements">Additional requirements</label>
-              <textarea id="additionalRequirements" name="additionalRequirements" value={form.additionalRequirements} onChange={handleChange} />
-            </div>
-            <div className="field">
-              <label htmlFor="remarks">Remarks</label>
-              <textarea id="remarks" name="remarks" value={form.remarks} onChange={handleChange} />
-            </div> */}
 
             <Alert>{submitError}</Alert>
             <button type="submit" className="btn btn-primary btn-block" disabled={submitting || !customer}>

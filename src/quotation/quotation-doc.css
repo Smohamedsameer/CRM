@@ -1,0 +1,41 @@
+/* PEB quotation pages (A4, 794 x 1123 px, always white). Everything is scoped under .pq so it
+   cannot leak into, or be changed by, the rest of the app's styles. */
+.pq .page, .pq .meas { font: 13px Calibri, Carlito, Arial, sans-serif; color: #000; text-align: left; }
+.pq .page { width: 794px; height: 1123px; background: #fff; position: relative; overflow: hidden; margin: 0 auto 14px; box-shadow: 0 1px 6px #0004; line-height: normal; }
+.pq .page * { box-sizing: border-box; }
+.pq table { width: auto; border-collapse: separate; font-size: inherit; }
+.pq td, .pq th { padding: 0; border: 0; text-align: left; vertical-align: middle; text-transform: none; color: inherit; font-size: inherit; font-weight: 400; }
+.pq .hd { position: absolute; left: 30px; right: 30px; top: 20px; height: 78px; display: flex; align-items: center; gap: 14px; border-bottom: 2px solid #8a6d2b; }
+.pq .hd img { height: 64px; width: auto; max-width: 200px; object-fit: contain; display: block; margin-bottom: 4px; }
+.pq .cn { color: #a5713a; font-size: 20px; letter-spacing: 1px; }
+.pq .bd { position: absolute; left: 30px; top: 102px; background: #e0b878; color: #fff; font-size: 11px; padding: 1px 14px; border-radius: 4px; }
+.pq .rd { position: absolute; left: 30px; right: 30px; top: 122px; display: flex; justify-content: space-between; }
+.pq .body { position: absolute; left: 40px; right: 40px; top: 150px; bottom: 98px; overflow: hidden; padding: 0; font: inherit; }
+.pq .body.meas { left: -9999px; top: 0; right: auto; bottom: auto; width: 714px; height: auto; overflow: visible; visibility: hidden; }
+.pq .blk { display: flow-root; }
+.pq .ft { position: absolute; bottom: 0; left: 0; right: 0; height: 88px; display: flex; align-items: center; gap: 16px; padding: 0 24px; font-size: 10.5px; line-height: 1.45; }
+.pq .ft img { height: 56px; width: auto; }
+.pq .sh { display: inline-block; background: #ffff00; font-size: 15px; margin: 10px 0 6px; }
+.pq .blk p { margin: 6px 0; line-height: 1.45; text-align: justify; }
+.pq table.t { border-collapse: collapse; table-layout: fixed; width: 100%; margin: 0; font-size: 12px; }
+.pq .t td { border: 1px solid #000; border-top: 0; padding: 2px 6px; text-align: left; font-weight: 400; overflow-wrap: anywhere; vertical-align: middle; }
+.pq .t.first td { border-top: 1px solid #000; }
+.pq .t .bn, .pq .t .hh td { background: #1f4e79; color: #fff; text-align: center; }
+.pq .cvw { position: absolute; top: 100px; bottom: 88px; left: 0; right: 0; display: flex; flex-direction: column; }
+.pq .cvt { background: linear-gradient(#3b86d1, #7db6ec); color: #fff; font: 700 54px Arial; text-align: center; padding: 24px 0; }
+.pq .cvb { background: #0d2b55; color: #fff; text-align: center; padding: 16px; font-size: 26px; letter-spacing: 1px; }
+.pq .cvi { flex: 1; min-height: 0; background: linear-gradient(#a9d3f5, #dfe9f1 60%, #c9ccd0); display: flex; align-items: center; justify-content: center; color: #5b6b7b; }
+.pq .cvi img { width: 100%; height: 100%; object-fit: cover; }
+.pq .ctr { text-align: center; }
+/* reference / attachment pages */
+.pq .attachment-page .body { top: 155px; bottom: 100px; left: 34px; right: 34px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #fff; padding: 10px; }
+.pq .attachment-page .attimg { width: 100%; height: 100%; object-fit: contain; display: block; }
+.pq .attachment-page .attlabel { position: absolute; left: 34px; right: 34px; bottom: 96px; text-align: center; font: 600 10px Calibri, Arial, sans-serif; color: #647084; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pq .attachment-page .bd { left: 34px; top: 102px; background: #1f4e79; font-size: 11px; padding: 4px 13px; border-radius: 4px; letter-spacing: .2px; }
+.pq .attachment-page .rd { left: 34px; right: 34px; top: 132px; font-size: 10.5px; color: #475569; }
+.pq .refbody { flex-direction: column; gap: 14px; align-items: stretch; justify-content: flex-start; }
+.pq .refcell { flex: 1; min-height: 0; display: flex; flex-direction: column; border: 1px solid #d7dde6; border-radius: 4px; padding: 8px; }
+.pq .refcell img { flex: 1; min-height: 0; width: 100%; object-fit: contain; display: block; }
+.pq .refcap { text-align: center; font: 700 13px Calibri, Arial, sans-serif; color: #1f4e79; padding-top: 6px; }
+.pq .reftitle { text-align: center; font: 700 15px Calibri, Arial, sans-serif; color: #1f4e79; margin: 2px 0 6px; }
+.pq-host { position: absolute; left: -10000px; top: 0; width: 794px; }

@@ -5,7 +5,7 @@ import Alert from "../components/Alert.jsx";
 import { SOURCES } from "../utils/constants.js";
 
 const EMPTY = {
-  customerName: "", companyName: "", phone: "", email: "",
+  customerName: "", companyName: "", projectName: "", address: "", phone: "", email: "",
   squareFeet: "", estimatedAmount: "", source: "META_AD",
 };
 
@@ -32,6 +32,8 @@ export default function AddLead() {
       const lead = await createLead({
         customerName: form.customerName.trim(),
         companyName: form.companyName.trim() || null,
+        projectName: form.projectName.trim() || null,
+        address: form.address.trim() || null,
         phone: form.phone.trim(),
         email: form.email.trim() || null,
         squareFeet: form.squareFeet ? Number(form.squareFeet) : null,
@@ -57,7 +59,7 @@ export default function AddLead() {
         <form onSubmit={handleSubmit}>
           <div className="row">
             <div className="field">
-              <label htmlFor="customerName">Customer name *</label>
+              <label htmlFor="customerName">Person name &amp; designation *</label>
               <input id="customerName" name="customerName" required value={form.customerName} onChange={handleChange} />
             </div>
             <div className="field">
@@ -78,6 +80,14 @@ export default function AddLead() {
               <label htmlFor="email">Email</label>
               <input id="email" name="email" type="email" value={form.email} onChange={handleChange} />
             </div>
+          </div>
+          <div className="field">
+            <label htmlFor="projectName">Project name (printed on the quotation cover &amp; subject)</label>
+            <input id="projectName" name="projectName" placeholder="e.g. TERRACE ROOFING SHED" value={form.projectName} onChange={handleChange} />
+          </div>
+          <div className="field">
+            <label htmlFor="address">Company address (printed in the quotation)</label>
+            <textarea id="address" name="address" rows={3} placeholder="Door no, street, area, city - pincode" value={form.address} onChange={handleChange} />
           </div>
           <div className="row">
             <div className="field">

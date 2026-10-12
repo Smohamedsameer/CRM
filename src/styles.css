@@ -550,3 +550,49 @@ tbody tr:hover { background: rgba(255, 255, 255, 0.02); }
 .photo-missing { font-size: 12px; color: #9aa0a6; padding: 24px 8px; text-align: center; }
 .diagram-img { width: 100%; max-width: 520px; display: block; margin: 0 auto 16px; }
 .diagram-img img { width: 100%; display: block; }
+
+/* ---------- Build quotation (8-page PEB format) ---------- */
+.quote-builder .pq-group { border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px 6px; margin-bottom: 16px; }
+.quote-builder .pq-group h4 { margin: 0 0 12px; font-size: 15px; }
+.quote-builder .pq-group-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.quote-builder .pq-toggle { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; font-weight: 600; cursor: pointer; }
+.quote-builder .pq-refs { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
+.quote-builder .pq-ref { display: flex; flex-direction: column; gap: 6px; align-items: stretch; margin: 0; padding: 8px; border: 1.5px solid var(--border); border-radius: 10px; background: #fff; color: #222; cursor: pointer; position: relative; }
+.quote-builder .pq-ref.on { border-color: #c9a227; box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.28); }
+.quote-builder .pq-ref.missing { opacity: 0.6; cursor: not-allowed; }
+.quote-builder .pq-ref input { position: absolute; top: 8px; left: 8px; z-index: 1; }
+.quote-builder .pq-ref img { width: 100%; height: 110px; object-fit: contain; display: block; }
+.quote-builder .pq-ref span { font-size: 12.5px; font-weight: 600; text-align: center; }
+.quote-builder .pq-ref-empty { display: flex !important; align-items: center; justify-content: center; height: 110px; color: #8b8d98; font-weight: 400 !important; }
+.quote-builder .pq-uploads { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.quote-builder .pq-chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; background: #262832; border: 1px solid var(--border); font-size: 12.5px; }
+.quote-builder .pq-chip button { background: none; border: 0; color: var(--danger); cursor: pointer; font-size: 16px; line-height: 1; }
+.quote-builder .pq-preview { margin-top: 18px; overflow: auto; max-height: 760px; padding: 14px; border: 1px solid var(--border); border-radius: 12px; background: #8a94a6; }
+
+/* ---------- Google-form style option cards without a picture ---------- */
+.image-radio-card.no-pic { justify-content: center; min-height: 64px; }
+.gf-ref { width: 100%; max-width: 560px; display: block; margin: 0 auto 16px; border-radius: 10px; background: #fff; }
+.gf-prefill { background: var(--gold-soft); border: 1px solid var(--gold-line); border-radius: 12px; padding: 14px 16px 4px; margin-bottom: 8px; }
+
+/* ---------- Section 7 price rows ---------- */
+.quote-builder .price-row { border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px 10px; margin-bottom: 14px; background: rgba(205, 163, 73, 0.05); }
+.quote-builder .price-row-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.quote-builder .price-no { flex: none; width: 30px; height: 30px; border-radius: 50%; background: var(--primary); color: #fff; font-weight: 800; display: grid; place-items: center; }
+.quote-builder .price-title { flex: 1; font-weight: 700; }
+.quote-builder .price-hint { margin: 0 0 8px; font-size: 13px; }
+.quote-builder .price-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0 12px; }
+.quote-builder .price-amount { padding: 11px 13px; border-radius: 10px; border: 1.5px dashed var(--fld-border); font-weight: 800; font-variant-numeric: tabular-nums; }
+.quote-builder .price-particulars { margin: 4px 0 8px; }
+.quote-builder .price-particulars summary { cursor: pointer; font-weight: 600; font-size: 13.5px; }
+.quote-builder .link-btn { background: none; border: 0; color: var(--primary); cursor: pointer; font-size: 13px; padding: 0 0 8px; }
+.quote-builder .quote-summary .row { justify-content: space-between; }
+
+.image-radio-wrap { position: relative; display: flex; }
+.image-radio-wrap .image-radio-card { flex: 1; }
+.light-theme textarea:disabled { background: #f0f2f6; color: var(--muted); }
+
+/* "Not Required" has no picture: show it as a small pill-style button instead of a full-width card */
+.image-radio-wrap.compact { justify-self: start; align-self: start; }
+.image-radio-wrap.compact .image-radio-card { flex: 0 0 auto; min-height: 0; border-radius: 999px; }
+.image-radio-wrap.compact .image-radio-foot { padding: 8px 18px 8px 14px; }
+.field-error { margin: 4px 0 0; color: #c0392b; font-size: 13px; font-weight: 600; }
