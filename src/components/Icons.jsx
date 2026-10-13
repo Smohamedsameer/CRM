@@ -95,3 +95,32 @@ export function QuotationIcon() {
     </svg>
   );
 }
+
+export function ChatIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 3.5c-4.7 0-8.5 3.3-8.5 7.4 0 2.2 1.1 4.2 2.9 5.5L5.8 20l3.6-1.8c.8.2 1.7.3 2.6.3 4.7 0 8.5-3.3 8.5-7.4S16.7 3.5 12 3.5Z"
+        stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+      <circle cx="8.5" cy="11" r="1" fill="currentColor" />
+      <circle cx="12" cy="11" r="1" fill="currentColor" />
+      <circle cx="15.5" cy="11" r="1" fill="currentColor" />
+    </svg>
+  );
+}
+
+export function SendIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M4 12 20 4l-4.5 16-3.5-6.5L4 12Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+      <path d="m12 13.5 3.5-3.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function BackIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="m14.5 5-7 7 7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}

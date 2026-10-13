@@ -1,5 +1,5 @@
 import { Fragment, useCallback, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import {
   clearWhatsAppHistory, confirmOrder, getLeadDetail, resendWelcome, retryMessage, sendQuotation, viewQuotationPdf,
 } from "../api/index.js";
@@ -171,6 +171,9 @@ export default function LeadDetail() {
         </table>
 
         <div className="row actions">
+          <Link to={`/chat/${lead.id}`} className="btn btn-secondary" style={{ textDecoration: "none", textAlign: "center" }}>
+            Open chat
+          </Link>
           <button type="button" className="btn btn-secondary" disabled={!!busy}
             onClick={() => run("welcome", () => resendWelcome(lead.id), "Welcome message re-sent.")}>
             {busy === "welcome" ? "Sending…" : "Resend welcome message"}
@@ -312,7 +315,7 @@ export default function LeadDetail() {
                 {lead.whatsAppMessages.map((m) => (
                   <Fragment key={m.id}>
                     <tr>
-                      <td>{labelize(m.type)}</td>
+                      <td>{m.direction === "INBOUND" ? "Customer reply" : m.body ? "Chat reply" : labelize(m.type)}</td>
                       <td><StatusBadge status={m.deliveryStatus} /></td>
                       <td>{formatDateTime(m.sentAt)}</td>
                       <td>

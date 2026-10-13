@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext.jsx";
-import { AddLeadIcon, ClientRequestIcon, DashboardIcon, DocumentsIcon, LogoutIcon, NotificationIcon, QuotationIcon, SettingsIcon } from "./Icons.jsx";
+import useChatUnread from "./useChatUnread.js";
+import { AddLeadIcon, ChatIcon, ClientRequestIcon, DashboardIcon, DocumentsIcon, LogoutIcon, NotificationIcon, QuotationIcon, SettingsIcon } from "./Icons.jsx";
 
 /**
  * Left-hand navigation. On desktop it's a fixed column under the top bar (logout is in the top bar,
@@ -8,6 +9,7 @@ import { AddLeadIcon, ClientRequestIcon, DashboardIcon, DocumentsIcon, LogoutIco
  */
 export default function Sidebar({ open, onClose }) {
   const { session, signOut } = useAuth();
+  const chatUnread = useChatUnread();
 
   return (
     <>
@@ -21,6 +23,10 @@ export default function Sidebar({ open, onClose }) {
           </NavLink>
           <NavLink to="/notifications" className="sidebar-link">
             <NotificationIcon /> <span>Notification</span>
+          </NavLink>
+          <NavLink to="/chat" className="sidebar-link">
+            <ChatIcon /> <span>Chat</span>
+            {chatUnread > 0 && <span className="sidebar-badge">{chatUnread > 99 ? "99+" : chatUnread}</span>}
           </NavLink>
           <NavLink to="/client-requests" className="sidebar-link">
             <ClientRequestIcon /> <span>Client Request</span>

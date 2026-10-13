@@ -5,6 +5,7 @@ import Dashboard from "./pages/Dashboard.jsx";
 import AddLead from "./pages/AddLead.jsx";
 import LeadDetail from "./pages/LeadDetail.jsx";
 import Notifications from "./pages/Notifications.jsx";
+import Chat from "./pages/Chat.jsx";
 import ClientRequests from "./pages/ClientRequests.jsx";
 import Documents from "./pages/Documents.jsx";
 import Settings from "./pages/Settings.jsx";
@@ -28,6 +29,8 @@ export default function App() {
         <Route path="/leads/new" element={<AddLead />} />
         <Route path="/leads/:id" element={<LeadDetail />} />
         <Route path="/notifications" element={<Notifications />} />
+        <Route path="/chat" element={<Chat />} />
+        <Route path="/chat/:leadId" element={<Chat />} />
         <Route path="/client-requests" element={<ClientRequests />} />
         <Route path="/documents" element={<Documents />} />
         <Route path="/settings" element={<Settings />} />

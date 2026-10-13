@@ -39,6 +39,14 @@ export const clearWhatsAppHistory = (leadId) =>
   request(`/api/whatsapp-messages/lead/${leadId}`, { method: "DELETE", auth: true });
 export const confirmOrder = (leadId) => request(`/api/orders/confirm/${leadId}`, { method: "POST", auth: true });
 
+// ---- Chat (WhatsApp conversations per lead) -----------------------------
+export const getConversations = () => request("/api/chat/conversations", { auth: true });
+export const getChatUnreadCount = () => request("/api/chat/unread-count", { auth: true });
+export const getChatThread = (leadId) => request(`/api/chat/leads/${leadId}`, { auth: true });
+export const markChatRead = (leadId) => request(`/api/chat/leads/${leadId}/read`, { method: "POST", auth: true });
+export const sendChatMessage = (leadId, text) =>
+  request(`/api/chat/leads/${leadId}/messages`, { method: "POST", body: { text }, auth: true });
+
 // ---- Notifications (bell in navbar) -------------------------------------
 export const getNotifications = (page = 0, size = 20) =>
   request(`/api/notifications?page=${page}&size=${size}`, { auth: true });
