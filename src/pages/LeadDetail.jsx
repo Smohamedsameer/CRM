@@ -1,11 +1,12 @@
 import { Fragment, useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
-  clearWhatsAppHistory, confirmOrder, getLeadDetail, resendWelcome, retryMessage, sendQuotation, uploadQuotationPdf, viewQuotationPdf,
+  clearWhatsAppHistory, confirmOrder, getLeadDetail, getQuotationFormData, resendWelcome, retryMessage, sendQuotation, uploadQuotationPdf, viewQuotationPdf,
 } from "../api/index.js";
 import Alert from "../components/Alert.jsx";
 import QuoteBuilder from "../components/QuoteBuilder.jsx";
 import StatusBadge from "../components/StatusBadge.jsx";
+import logoUrl from "../quotation/assets/logo.png";
 import { TIMELINE_LABELS, TIMELINE_ORDER } from "../utils/constants.js";
 import { formatDateTime, labelize, money } from "../utils/format.js";
 import { gfLabel } from "../utils/constants.js";
@@ -86,7 +87,19 @@ export default function LeadDetail() {
       return;
     }
     run(`upload-${q.id}`, () => uploadQuotationPdf(q.id, file),
-      `PDF for ${q.quotationNumber} replaced. Click “View PDF” to check it, then send it to the customer.`);
+      `PDF for ${q.quotationNumber} replaced. Click “View” to check it, then “Send via WhatsApp”.`);
+  }
+
+  /** Builds the editable Word version from the details saved when the quotation was generated. */
+  function handleDownloadWord(q) {
+    run(`word-${q.id}`, async () => {
+      const data = await getQuotationFormData(q.id);
+      if (!data) {
+        throw new Error("The details of this quotation were not saved (it was generated before this option existed). Generate the quotation again to get a Word file.");
+      }
+      const { buildPebDocx, downloadBlob } = await import("../quotation/buildPebDocx.js");
+      downloadBlob(await buildPebDocx(data, logoUrl), `${q.quotationNumber.replace(/\//g, "-")}.docx`);
+    }, "Word file downloaded. Fix the alignment, save it as PDF, then click “Upload PDF”.");
   }
 
   function handleSend(q) {
@@ -290,18 +303,21 @@ export default function LeadDetail() {
                           <div className="table-row-actions">
                             <button type="button" className="btn btn-secondary btn-sm" disabled={!!busy}
                               onClick={() => run(`pdf-${q.id}`, () => viewQuotationPdf(q.id), null)}>
-                              {busy === `pdf-${q.id}` ? "Opening…" : "View PDF"}
+                              {busy === `pdf-${q.id}` ? "Opening…" : "View"}
+                            </button>
+                            <button type="button" className="btn btn-secondary btn-sm" disabled={!!busy} onClick={() => handleDownloadWord(q)}>
+                              {busy === `word-${q.id}` ? "Preparing…" : "Download Word"}
                             </button>
                             {q.status !== "ACCEPTED" && (
                               <label className={`btn btn-secondary btn-sm${busy ? " disabled" : ""}`} style={{ cursor: busy ? "not-allowed" : "pointer", opacity: busy ? 0.6 : 1 }}
                                 title="Upload the PDF you edited in Word - it replaces the generated PDF">
-                                {busy === `upload-${q.id}` ? "Uploading…" : "Upload edited PDF"}
+                                {busy === `upload-${q.id}` ? "Uploading…" : "Upload PDF"}
                                 <input type="file" accept="application/pdf,.pdf" hidden disabled={!!busy} onChange={(ev) => handlePdfPicked(q, ev)} />
                               </label>
                             )}
                             {(q.status === "GENERATED" || RESENDABLE.includes(q.status)) && (
                               <button type="button" className="btn btn-secondary btn-sm" disabled={!!busy} onClick={() => handleSend(q)}>
-                                {busy === `send-${q.id}` ? "Sending…" : RESENDABLE.includes(q.status) ? "Re-send via WhatsApp" : "Send via WhatsApp"}
+                                {busy === `send-${q.id}` ? "Sending…" : "Send via WhatsApp"}
                               </button>
                             )}
                           </div>

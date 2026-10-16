@@ -135,7 +135,7 @@ export default function Dashboard() {
                   <td>{formatDate(lead.createdAt)}</td>
                   <td>
                     <div className="table-row-actions" style={{ alignItems: "center" }}>
-                      <Link to={`/leads/${lead.id}`}>View</Link>
+                      <Link to={`/leads/${lead.id}`} className="btn btn-outline-success btn-sm">View</Link>
                       <button
                         type="button"
                         className="btn btn-danger btn-sm"

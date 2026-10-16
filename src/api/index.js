@@ -22,6 +22,17 @@ export const resendWelcome = (id) => request(`/api/leads/${id}/resend-welcome`, 
 /** payload: { items: [{ description, quantity, unitPrice }], discount?, taxPercentage? } */
 export const generateQuotation = (leadId, payload = {}) =>
   request(`/api/quotations/generate/${leadId}`, { method: "POST", body: payload, auth: true });
+/** Saves the quotation-builder details so the Word version can be downloaded later from the Quotations list. */
+export const saveQuotationFormData = (id, data) => request(`/api/quotations/${id}/form-data`, { method: "PUT", body: data, auth: true });
+/** Returns the saved details, or null when none were saved (quotation made before this feature existed). */
+export async function getQuotationFormData(id) {
+  try {
+    return await request(`/api/quotations/${id}/form-data`, { auth: true });
+  } catch (err) {
+    if (err.status === 404) return null;
+    throw err;
+  }
+}
 /** Replaces the quotation's stored PDF: the PEB PDF built in the browser, or a PDF edited in Word and uploaded by the employee. */
 export async function uploadQuotationPdf(id, blob) {
   const session = sessionStorageHelper.read();
