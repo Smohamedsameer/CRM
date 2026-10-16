@@ -256,15 +256,15 @@ export default function Enquiry() {
             <OptionCards legend="Roofing / Cladding Requirement" name="roofingReq" options={GF_ROOFING_REQUIREMENTS} value={f.roofingReq}
               onChange={(v) => set("roofingReq", v)} otherValue={f.roofingReqOther} onOther={(v) => set("roofingReqOther", v)} required
               error={err("roofingReq")} otherError={err("roofingReqOther")} />
-            <RadioGroup legend="Building Roof Material" name="roofMaterial" options={GF_SHEET_MATERIALS} value={f.roofMaterial} onChange={(v) => set("roofMaterial", v)} required error={err("roofMaterial")} />
+            <RadioGroup legend="Building Roof Material" name="roofMaterial" options={GF_SHEET_MATERIALS} value={f.roofMaterial} onChange={(v) => set("roofMaterial", v)}  error={err("roofMaterial")} />
             {Other("roofMaterialOther", "roofMaterial")}
-            <RadioGroup legend="Building Cladding Material" name="claddingMaterial" options={GF_SHEET_MATERIALS} value={f.claddingMaterial} onChange={(v) => set("claddingMaterial", v)} required error={err("claddingMaterial")} />
+            <RadioGroup legend="Building Cladding Material" name="claddingMaterial" options={GF_SHEET_MATERIALS} value={f.claddingMaterial} onChange={(v) => set("claddingMaterial", v)}  error={err("claddingMaterial")} />
             {Other("claddingMaterialOther", "claddingMaterial")}
             <div className="row">
               {T("thickness", "Roof / Cladding Sheet Thickness (Mention mm)", { required: false })}
               {T("colour", "Roof / Cladding Sheet Colour (RAL Code)", { required: false })}
             </div>
-            <RadioGroup legend="Surface Preparation" name="surfacePrep" options={GF_SURFACE_PREPARATION} value={f.surfacePrep[0] || ""} onChange={one("surfacePrep")} required error={err("surfacePrep")} />
+            <RadioGroup legend="Surface Preparation" name="surfacePrep" options={GF_SURFACE_PREPARATION} value={f.surfacePrep[0] || ""} onChange={one("surfacePrep")}  error={err("surfacePrep")} />
             {has(f.surfacePrep, "OTHER") && T("surfacePrepOther", "Other – please specify", { required: true })}
             <RadioGroup legend="Protective Coating (Primer / Finishing Paint)" name="coating" options={GF_PROTECTIVE_COATING} value={f.coating} onChange={(v) => set("coating", v)}  />
             {Other("coatingOther", "coating")}
@@ -281,10 +281,10 @@ export default function Enquiry() {
             </PhotoChoice>
 
             <OptionCards legend="Roof Ventilator Required?" name="roofVent" options={GF_ROOF_VENTILATORS}
-              value={f.roofVent[0] || ""} onChange={one("roofVent")} required error={err("roofVent")} />
+              value={f.roofVent[0] || ""} onChange={one("roofVent")}  error={err("roofVent")} />
 
             <OptionCards legend="Gutter Required?" name="gutter" options={GF_GUTTERS}
-              value={f.gutter[0] || ""} onChange={one("gutter")} required error={err("gutter")} />
+              value={f.gutter[0] || ""} onChange={one("gutter")}  error={err("gutter")} />
             {gutterOn && (
               <>
                 <RadioGroup legend="Gutter Material" name="gutterMaterial" options={GF_GUTTER_MATERIALS} value={f.gutterMaterial} onChange={(v) => set("gutterMaterial", v)}  />
@@ -296,7 +296,7 @@ export default function Enquiry() {
 
             <div className="photo-choice-grid">
               <PhotoChoice name="canopy" image={["slab", "slap"]} title="Canopy Required?" required withOther error={err("canopy")} value={f.canopy} onChange={(v) => set("canopy", v)}>
-                {f.canopy === "other" ? T("canopyOther", "Please specify", { required: true }) : (
+                {f.canopy === "other" ? T("canopyOther", "Please specify", { required: false }) : (
                   <div className="row">
                     {T("canopySize", "Canopy Size ( width * length )", { required: false })}
                     {T("canopyHeightFfl", "Canopy Height from FFL ( mtr / ft )", { dim: true, required: false })}
@@ -304,7 +304,7 @@ export default function Enquiry() {
                 )}
               </PhotoChoice>
               <PhotoChoice name="louver" image="window" title="Louver Required? (Sheet Metal Louver)" required withOther error={err("louver")} value={f.louver} onChange={(v) => set("louver", v)}>
-                {f.louver === "other" ? T("louverOther", "Please specify", { required: true }) : T("louverSize", "Louver Size ( width * length )", { required: true })}
+                {f.louver === "other" ? T("louverOther", "Please specify", { required: false }) : T("louverSize", "Louver Size ( width * length )", { required: false })}
               </PhotoChoice>
             </div>
 
