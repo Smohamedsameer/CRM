@@ -266,7 +266,7 @@ export default function Documents() {
   }
 
   return (
-    <div className="container">
+    <div className="container wide">
       <h2>Certificates &amp; Documents</h2>
       <Alert>{error}</Alert>
       {docs === null && !error && <p className="muted">Loading…</p>}

@@ -364,8 +364,16 @@ tbody tr:hover { background: rgba(255, 255, 255, 0.02); }
   padding: 12px 0; border-bottom: 1px solid var(--border);
 }
 .doc-row:last-child { border-bottom: none; }
-.doc-row-main { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-width: 0; }
-.doc-row-name { font-size: 14px; font-weight: 600; }
+.doc-row-main { display: flex; align-items: center; gap: 12px; flex: 1 1 320px; min-width: 0; }
+.doc-row-name { font-size: 14px; font-weight: 600; flex: 1 1 auto; min-width: 0; }
+.doc-row-main .badge { flex: none; min-width: 108px; text-align: center; justify-content: center; }
+.doc-row .table-row-actions { flex: none; flex-wrap: nowrap; margin-left: auto; }
+.doc-row .table-row-actions .btn { min-width: 88px; text-align: center; justify-content: center; }
+@media (max-width: 600px) {
+  .doc-row-main { flex-basis: 100%; }
+  .doc-row .table-row-actions { width: 100%; }
+  .doc-row .table-row-actions .btn { flex: 1; }
+}
 .doc-badge-empty { background: rgba(255, 255, 255, 0.06); color: var(--muted); }
 .doc-row-error { flex-basis: 100%; color: var(--danger); font-size: 13px; }
 
@@ -649,6 +657,17 @@ tbody tr:hover { background: rgba(255, 255, 255, 0.02); }
 .image-radio-wrap.compact .image-radio-card { flex: 0 0 auto; min-height: 0; border-radius: 999px; }
 .image-radio-wrap.compact .image-radio-foot { padding: 8px 18px 8px 14px; }
 .field-error { margin: 4px 0 0; color: #c0392b; font-size: 13px; font-weight: 600; }
+
+/* Required / invalid fields on the enquiry form: red border (and red glow on focus) as well as the message below */
+.field.has-error input, .field.has-error select, .field.has-error textarea,
+.field.has-error input:hover, .field.has-error textarea:hover { border-color: #d93025; background: #fff6f5; }
+.field.has-error input:focus, .field.has-error select:focus, .field.has-error textarea:focus {
+  border-color: #d93025; box-shadow: 0 0 0 3px rgba(217, 48, 37, 0.22);
+}
+.field.has-error label { color: #b42318; }
+.radio-group.has-error .radio-option, .radio-group.has-error .checkbox-option { border-color: #d93025; }
+.image-radio-group.has-error .image-radio-card:not(.selected) { border-color: #d93025; }
+.photo-choice.has-error { border-color: #d93025; box-shadow: 0 0 0 3px rgba(217, 48, 37, 0.15); }
 /* ---------- Chat (WhatsApp-style, per lead) ---------- */
 .sidebar-badge {
   margin-left: auto; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px;
