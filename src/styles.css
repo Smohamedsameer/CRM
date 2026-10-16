@@ -747,3 +747,89 @@ tbody tr:hover { background: rgba(255, 255, 255, 0.02); }
   .chat-window-long { display: none; }
   .chat-bubble { max-width: 88%; }
 }
+
+/* =====================================================================
+   ENQUIRY FORM - required-field errors (red) + premium alignment polish
+   (appended; scoped to .enquiry-page so the admin screens are untouched)
+   ===================================================================== */
+.enquiry-page { --err: #d4351c; --err-bg: #fdecea; --err-ring: rgba(212, 53, 28, 0.16); }
+
+/* required star */
+.enquiry-page .req { color: var(--err); font-weight: 800; }
+
+/* red message under the field: "! This field is required" */
+.enquiry-page .field-error {
+  display: flex; align-items: center; gap: 7px; margin: 7px 0 0;
+  color: var(--err); font-size: 13px; font-weight: 600; line-height: 1.3;
+}
+.enquiry-page .field-error::before {
+  content: "!"; flex: none; width: 17px; height: 17px; border-radius: 50%;
+  background: var(--err); color: #fff; font-size: 11px; font-weight: 800;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+
+/* text / date inputs */
+.enquiry-page .field.has-error input,
+.enquiry-page .field.has-error select,
+.enquiry-page .field.has-error textarea {
+  border-color: var(--err); background: #fffafa; box-shadow: 0 0 0 3px var(--err-ring);
+}
+.enquiry-page .field.has-error > label { color: var(--err); }
+
+/* radio pills + picture cards + Yes/No picture cards */
+.enquiry-page fieldset.has-error legend { color: var(--err); border-left-color: var(--err); }
+.enquiry-page .radio-group.has-error .radio-option:not(:has(input:checked)) { border-color: var(--err); background: #fffafa; }
+.enquiry-page .image-radio-group.has-error .image-radio-card:not(.selected) { border-color: var(--err); }
+.enquiry-page .photo-choice.has-error { border-color: var(--err); box-shadow: 0 0 0 3px var(--err-ring); }
+.enquiry-page .photo-choice.has-error .photo-choice-body > strong { color: var(--err); }
+
+/* small shake when an error first appears */
+@keyframes enq-shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+.enquiry-page .field.has-error, .enquiry-page fieldset.has-error, .enquiry-page .photo-choice.has-error { animation: enq-shake .3s ease-in-out 1; }
+@media (prefers-reduced-motion: reduce) {
+  .enquiry-page .field.has-error, .enquiry-page fieldset.has-error, .enquiry-page .photo-choice.has-error { animation: none; }
+}
+
+/* summary banner above the Submit button */
+.enquiry-page .error-box {
+  display: flex; align-items: center; gap: 10px; border: 1px solid rgba(212, 53, 28, 0.35);
+  border-left: 4px solid var(--err); border-radius: 10px; padding: 12px 16px; font-weight: 600;
+}
+
+/* ---------- premium look & alignment ---------- */
+.enquiry-page .card { border-top: 4px solid var(--primary); border-radius: 16px; }
+.enquiry-page .card > h2 { letter-spacing: 0.01em; margin-bottom: 6px; }
+.enquiry-page .card > .muted { margin: 0 0 22px; line-height: 1.5; }
+
+/* section titles: gold bar + hairline that fades out (replaces the plain <hr> look) */
+.enquiry-page h3 {
+  display: flex; align-items: center; gap: 14px; font-size: 17px; letter-spacing: 0.02em; margin: 4px 0 18px;
+}
+.enquiry-page h3::before { content: ""; width: 4px; height: 20px; border-radius: 3px; background: var(--primary); flex: none; }
+.enquiry-page h3::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, var(--gold-line), transparent); }
+.enquiry-page hr { border: 0; height: 0; margin: 34px 0 0; }
+
+.enquiry-page .field-label-fix, .enquiry-page label { letter-spacing: 0.01em; }
+.enquiry-page .gf-prefill { border-radius: 14px; }
+.enquiry-page .photo-choice-grid { align-items: start; }
+.enquiry-page .photo-choice, .enquiry-page .image-radio-card { border-radius: 14px; }
+
+/* Submit button */
+.enquiry-page .btn-primary.btn-block {
+  margin-top: 10px; padding: 15px 20px; font-size: 16px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+  border-radius: 12px; box-shadow: 0 8px 22px rgba(185, 138, 38, 0.35); transition: transform .15s, box-shadow .15s, background .15s;
+}
+.enquiry-page .btn-primary.btn-block:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 12px 26px rgba(185, 138, 38, 0.45); }
+
+@media (min-width: 601px) {
+  .enquiry-page .card { padding: 36px 44px; }
+  .enquiry-page input, .enquiry-page select, .enquiry-page textarea { padding: 12px 14px; border-radius: 12px; }
+
+  /* two-column rows: labels, inputs and error messages line up across the columns even when a label wraps to 2 lines */
+  .enquiry-page .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); column-gap: 20px; align-items: start; }
+  .enquiry-page .row > .field { display: grid; grid-row: span 3; grid-template-rows: subgrid; row-gap: 0; align-content: start; }
+  .enquiry-page .row > .field > label { align-self: end; }
+}
+@supports not (grid-template-rows: subgrid) {
+  .enquiry-page .row > .field { grid-row: auto; grid-template-rows: none; display: block; }
+}

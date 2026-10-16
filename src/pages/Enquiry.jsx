@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getEnquiryPrefill, submitEnquiry } from "../api/index.js";
 import Alert from "../components/Alert.jsx";
@@ -45,13 +45,52 @@ const has = (list, v) => list.includes(v);
 /** length fields must look like "20 mtr" or "20 ft" (number + unit) */
 const DIM_RE = /^\s*\d+(?:\.\d+)?\s*(?:mtrs?|meters?|metres?|m|ft|feet|foot)\s*$/i;
 const DIM_EXAMPLE = "20 mtr / 20 ft";
-const dimInvalid = (v) => String(v || "").trim() !== "" && !DIM_RE.test(v);
-const DIM_FIELDS = [
-  ["spanWidth", "Span / building Width"], ["length", "Length"], ["eaveHeight", "Eave Height"],
-  ["clearEaveHeight", "Clear Eave Height"], ["intermediateSpacing", "Intermediate Column Spacing"],
-  ["gableBaySpacing", "Gable End Bay Column Spacing"], ["brickWallHeight", "Brick Wall Height"],
-  ["craneHeight", "Crane Lifting Height"], ["canopyHeightFfl", "Canopy Height from FFL"],
-];
+
+const MSG_REQUIRED = "This field is required";
+const MSG_PICK = "Please select an option";
+const MSG_SPECIFY = "Please specify";
+const MSG_DIM = `Please enter a value with its unit, for example: ${DIM_EXAMPLE}`;
+
+/** Returns { fieldKey: "message" } for everything the customer still has to fix. Keys are in page order. */
+function validate(f) {
+  const e = {};
+  const text = (k, msg = MSG_REQUIRED) => { if (!String(f[k] || "").trim()) e[k] = msg; };
+  const pick = (k) => { if (!f[k]) e[k] = MSG_PICK; };
+  const other = (k, parent) => { if (f[parent] === "OTHER") text(k, MSG_SPECIFY); };
+  const dim = (k, required) => {
+    const v = String(f[k] || "").trim();
+    if (!v) { if (required) e[k] = MSG_REQUIRED; } else if (!DIM_RE.test(v)) e[k] = MSG_DIM;
+  };
+
+  text("projectLocation");
+  pick("buildingType"); other("buildingTypeOther", "buildingType");
+  pick("columnType"); other("columnTypeOther", "columnType");
+  pick("endFrameType"); other("endFrameTypeOther", "endFrameType");
+  dim("spanWidth", true); dim("length", true); dim("eaveHeight", true); dim("clearEaveHeight", false);
+  dim("intermediateSpacing", false); dim("gableBaySpacing", false); dim("brickWallHeight", true);
+  pick("roofingReq"); other("roofingReqOther", "roofingReq");
+  pick("roofMaterial"); other("roofMaterialOther", "roofMaterial");
+  pick("claddingMaterial"); other("claddingMaterialOther", "claddingMaterial");
+  if (!f.surfacePrep.length) e.surfacePrep = MSG_PICK;
+  else if (f.surfacePrep.includes("OTHER")) text("surfacePrepOther", MSG_SPECIFY);
+  other("coatingOther", "coating");
+  pick("craneRequired");
+  if (f.craneRequired === "other") text("craneRequiredOther", MSG_SPECIFY);
+  else if (f.craneRequired === "yes") { text("craneType"); text("craneCapacity"); dim("craneHeight", true); }
+  if (!f.roofVent.length) e.roofVent = MSG_PICK;
+  if (!f.gutter.length) e.gutter = MSG_PICK;
+  else if (!f.gutter.includes("NOT_REQUIRED")) {
+    other("gutterMaterialOther", "gutterMaterial"); other("downpipeMaterialOther", "downpipeMaterial");
+  }
+  pick("canopy");
+  if (f.canopy === "other") text("canopyOther", MSG_SPECIFY);
+  else if (f.canopy === "yes") dim("canopyHeightFfl", false);
+  pick("louver");
+  if (f.louver === "other") text("louverOther", MSG_SPECIFY);
+  else if (f.louver === "yes") text("louverSize");
+  text("startDate");
+  return e;
+}
 
 export default function Enquiry() {
   const { token } = useParams();
@@ -61,6 +100,10 @@ export default function Enquiry() {
   const [submitError, setSubmitError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+  const [tried, setTried] = useState(false); // becomes true after the first Submit click -> required-field errors start showing
+  const errors = useMemo(() => validate(f), [f]);
+  const errorCount = Object.keys(errors).length;
+  const err = (k) => (tried ? errors[k] : undefined);
 
   useEffect(() => {
     let cancelled = false;
@@ -73,13 +116,14 @@ export default function Enquiry() {
   const set = (k, v) => setF((p) => ({ ...p, [k]: v }));
   const T = (k, label, props = {}) => {
     const { dim, ...inp } = props;
-    const bad = dim && dimInvalid(f[k]);
+    // required-field errors show after the first Submit; a wrong unit format shows as soon as the customer types
+    const msg = errors[k] && (tried || (dim && String(f[k] || "").trim())) ? errors[k] : "";
     return (
-      <div className="field" key={k}>
-        <label htmlFor={k}>{label}{props.required ? " *" : ""}</label>
+      <div className={"field" + (msg ? " has-error" : "")} key={k} data-field={k}>
+        <label htmlFor={k}>{label}{props.required ? <span className="req"> *</span> : ""}</label>
         <input id={k} value={f[k]} onChange={(e) => set(k, e.target.value)} placeholder={dim ? "e.g. " + DIM_EXAMPLE : undefined}
-          aria-invalid={bad || undefined} style={bad ? { borderColor: "#c0392b" } : undefined} {...inp} />
-        {bad && <p className="field-error">Please enter a value with its unit, for example: {DIM_EXAMPLE}</p>}
+          aria-invalid={msg ? true : undefined} aria-describedby={msg ? `${k}-err` : undefined} {...inp} />
+        {msg && <p className="field-error" id={`${k}-err`} role="alert">{msg}</p>}
       </div>
     );
   };
@@ -91,14 +135,15 @@ export default function Enquiry() {
   async function handleSubmit(e) {
     e.preventDefault();
     if (submitting) return;
-    const badDim = DIM_FIELDS.find(([k]) => dimInvalid(f[k]));
-    if (badDim) {
-      document.getElementById(badDim[0])?.focus();
-      return setSubmitError(`${badDim[1]}: please enter a number with its unit, for example ${DIM_EXAMPLE}.`);
+    setTried(true);
+    const first = Object.keys(errors)[0];
+    if (first) {
+      // jump to the first missing / invalid field (in page order) and focus it
+      const el = document.querySelector(`[data-field="${first}"]`);
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+      el?.querySelector("input:not([disabled]), select, textarea")?.focus({ preventScroll: true });
+      return;
     }
-    if (!f.surfacePrep.length) return setSubmitError("Please choose a Surface Preparation option.");
-    if (!f.roofVent.length) return setSubmitError("Please choose a Roof Ventilator option (or Not Required).");
-    if (!f.gutter.length) return setSubmitError("Please choose a Gutter option (or Not Required).");
     setSubmitError("");
     setSubmitting(true);
     // everything the customer typed/picked, exactly as entered, plus the key names the older screens read
@@ -157,7 +202,7 @@ export default function Enquiry() {
         <Alert type="success">{done ? "Thank you! Your enquiry has been received. We will contact you shortly." : ""}</Alert>
 
         {!loadError && !done && (
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} noValidate>
             <h3>Personal Information</h3>
             <div className="gf-prefill">
               <div className="row">
@@ -175,10 +220,11 @@ export default function Enquiry() {
             <hr />
             <h3>1. Building Type</h3>
             <OptionCards legend="Type of Building" name="buildingType" options={GF_BUILDING_TYPES} value={f.buildingType}
-              onChange={(v) => set("buildingType", v)} otherValue={f.buildingTypeOther} onOther={(v) => set("buildingTypeOther", v)} required />
-            <RadioGroup legend="Column Type" name="columnType" options={GF_COLUMN_TYPES} value={f.columnType} onChange={(v) => set("columnType", v)} required />
+              onChange={(v) => set("buildingType", v)} otherValue={f.buildingTypeOther} onOther={(v) => set("buildingTypeOther", v)} required
+              error={err("buildingType")} otherError={err("buildingTypeOther")} />
+            <RadioGroup legend="Column Type" name="columnType" options={GF_COLUMN_TYPES} value={f.columnType} onChange={(v) => set("columnType", v)} required error={err("columnType")} />
             {Other("columnTypeOther", "columnType")}
-            <RadioGroup legend="End Frame Type" name="endFrameType" options={GF_END_FRAME_TYPES} value={f.endFrameType} onChange={(v) => set("endFrameType", v)} required />
+            <RadioGroup legend="End Frame Type" name="endFrameType" options={GF_END_FRAME_TYPES} value={f.endFrameType} onChange={(v) => set("endFrameType", v)} required error={err("endFrameType")} />
             {Other("endFrameTypeOther", "endFrameType")}
 
             <hr />
@@ -208,23 +254,24 @@ export default function Enquiry() {
             <hr />
             <h3>3. Roofing and Cladding Covering Area</h3>
             <OptionCards legend="Roofing / Cladding Requirement" name="roofingReq" options={GF_ROOFING_REQUIREMENTS} value={f.roofingReq}
-              onChange={(v) => set("roofingReq", v)} otherValue={f.roofingReqOther} onOther={(v) => set("roofingReqOther", v)} required />
-            <RadioGroup legend="Building Roof Material" name="roofMaterial" options={GF_SHEET_MATERIALS} value={f.roofMaterial} onChange={(v) => set("roofMaterial", v)} required />
+              onChange={(v) => set("roofingReq", v)} otherValue={f.roofingReqOther} onOther={(v) => set("roofingReqOther", v)} required
+              error={err("roofingReq")} otherError={err("roofingReqOther")} />
+            <RadioGroup legend="Building Roof Material" name="roofMaterial" options={GF_SHEET_MATERIALS} value={f.roofMaterial} onChange={(v) => set("roofMaterial", v)} required error={err("roofMaterial")} />
             {Other("roofMaterialOther", "roofMaterial")}
-            <RadioGroup legend="Building Cladding Material" name="claddingMaterial" options={GF_SHEET_MATERIALS} value={f.claddingMaterial} onChange={(v) => set("claddingMaterial", v)} required />
+            <RadioGroup legend="Building Cladding Material" name="claddingMaterial" options={GF_SHEET_MATERIALS} value={f.claddingMaterial} onChange={(v) => set("claddingMaterial", v)} required error={err("claddingMaterial")} />
             {Other("claddingMaterialOther", "claddingMaterial")}
             <div className="row">
               {T("thickness", "Roof / Cladding Sheet Thickness (Mention mm)", { required: false })}
               {T("colour", "Roof / Cladding Sheet Colour (RAL Code)", { required: false })}
             </div>
-            <RadioGroup legend="Surface Preparation" name="surfacePrep" options={GF_SURFACE_PREPARATION} value={f.surfacePrep[0] || ""} onChange={one("surfacePrep")}  />
+            <RadioGroup legend="Surface Preparation" name="surfacePrep" options={GF_SURFACE_PREPARATION} value={f.surfacePrep[0] || ""} onChange={one("surfacePrep")} required error={err("surfacePrep")} />
             {has(f.surfacePrep, "OTHER") && T("surfacePrepOther", "Other – please specify", { required: true })}
             <RadioGroup legend="Protective Coating (Primer / Finishing Paint)" name="coating" options={GF_PROTECTIVE_COATING} value={f.coating} onChange={(v) => set("coating", v)}  />
             {Other("coatingOther", "coating")}
 
             <hr />
             <h3>5. Crane Requirements</h3>
-            <PhotoChoice name="craneRequired" image="crane" title="Crane Required?" required withOther value={f.craneRequired} onChange={(v) => set("craneRequired", v)}>
+            <PhotoChoice name="craneRequired" image="crane" title="Crane Required?" required withOther error={err("craneRequired")} value={f.craneRequired} onChange={(v) => set("craneRequired", v)}>
               {f.craneRequired === "other" ? T("craneRequiredOther", "Please specify", { required: true }) : (
                 <>
                   <div className="row">{T("craneType", "Crane Type", { required: craneYes })}{T("craneCapacity", "Crane Capacity (Tonnes)", { required: craneYes })}</div>
@@ -234,10 +281,10 @@ export default function Enquiry() {
             </PhotoChoice>
 
             <OptionCards legend="Roof Ventilator Required?" name="roofVent" options={GF_ROOF_VENTILATORS}
-              value={f.roofVent[0] || ""} onChange={one("roofVent")} required />
+              value={f.roofVent[0] || ""} onChange={one("roofVent")} required error={err("roofVent")} />
 
             <OptionCards legend="Gutter Required?" name="gutter" options={GF_GUTTERS}
-              value={f.gutter[0] || ""} onChange={one("gutter")} required />
+              value={f.gutter[0] || ""} onChange={one("gutter")} required error={err("gutter")} />
             {gutterOn && (
               <>
                 <RadioGroup legend="Gutter Material" name="gutterMaterial" options={GF_GUTTER_MATERIALS} value={f.gutterMaterial} onChange={(v) => set("gutterMaterial", v)}  />
@@ -248,7 +295,7 @@ export default function Enquiry() {
             )}
 
             <div className="photo-choice-grid">
-              <PhotoChoice name="canopy" image={["slab", "slap"]} title="Canopy Required?" required withOther value={f.canopy} onChange={(v) => set("canopy", v)}>
+              <PhotoChoice name="canopy" image={["slab", "slap"]} title="Canopy Required?" required withOther error={err("canopy")} value={f.canopy} onChange={(v) => set("canopy", v)}>
                 {f.canopy === "other" ? T("canopyOther", "Please specify", { required: true }) : (
                   <div className="row">
                     {T("canopySize", "Canopy Size ( width * length )", { required: false })}
@@ -256,18 +303,21 @@ export default function Enquiry() {
                   </div>
                 )}
               </PhotoChoice>
-              <PhotoChoice name="louver" image="window" title="Louver Required? (Sheet Metal Louver)" required withOther value={f.louver} onChange={(v) => set("louver", v)}>
+              <PhotoChoice name="louver" image="window" title="Louver Required? (Sheet Metal Louver)" required withOther error={err("louver")} value={f.louver} onChange={(v) => set("louver", v)}>
                 {f.louver === "other" ? T("louverOther", "Please specify", { required: true }) : T("louverSize", "Louver Size ( width * length )", { required: true })}
               </PhotoChoice>
             </div>
 
             <hr />
             <h3>10. Project Starting Duration Status</h3>
-            <div className="field" style={{ maxWidth: 280 }}>
-              <label htmlFor="startDate">Project Starting Proposal Date *</label>
-              <input id="startDate" type="date" required value={f.startDate} onChange={(e) => set("startDate", e.target.value)} />
+            <div className={"field" + (err("startDate") ? " has-error" : "")} data-field="startDate" style={{ maxWidth: 280 }}>
+              <label htmlFor="startDate">Project Starting Proposal Date<span className="req"> *</span></label>
+              <input id="startDate" type="date" required value={f.startDate} onChange={(e) => set("startDate", e.target.value)}
+                aria-invalid={err("startDate") ? true : undefined} />
+              {err("startDate") && <p className="field-error" role="alert">{err("startDate")}</p>}
             </div>
 
+            <Alert>{tried && errorCount > 0 ? `Please complete the ${errorCount} highlighted required field${errorCount > 1 ? "s" : ""} (marked in red) before submitting.` : ""}</Alert>
             <Alert>{submitError}</Alert>
             <button type="submit" className="btn btn-primary btn-block" disabled={submitting || !customer}>
               {submitting ? "Submitting…" : "Submit enquiry"}

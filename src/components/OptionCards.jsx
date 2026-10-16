@@ -9,7 +9,7 @@ import Photo from "./Photo.jsx";
  * Options with neither (e.g. "Others", "Not Required") render as a compact text card.
  * Choosing "OTHER" reveals a text box (onOther / otherValue).
  */
-export default function OptionCards({ legend, name, options, value, onChange, multi = false, required, otherValue = "", onOther, exclusive, hint }) {
+export default function OptionCards({ legend, name, options, value, onChange, multi = false, required, otherValue = "", onOther, exclusive, hint, error, otherError }) {
   const [zoom, setZoom] = useState(null);
   const picked = multi ? (value || []) : [value];
   const isOn = (v) => picked.includes(v);
@@ -29,7 +29,7 @@ export default function OptionCards({ legend, name, options, value, onChange, mu
   const needOther = picked.includes("OTHER");
 
   return (
-    <fieldset className="image-radio-group">
+    <fieldset className={"image-radio-group" + (error ? " has-error" : "")} data-field={name} aria-invalid={error ? true : undefined}>
       <legend>{legend}{required ? " *" : ""}</legend>
       {hint && <p className="muted" style={{ marginTop: -4 }}>{hint}</p>}
       <div className="image-radio-options">
@@ -50,10 +50,12 @@ export default function OptionCards({ legend, name, options, value, onChange, mu
           </div>
         ))}
       </div>
+      {error && <p className="field-error" role="alert">{error}</p>}
       {needOther && onOther && (
-        <div className="field" style={{ marginTop: 12 }}>
+        <div className={"field" + (otherError ? " has-error" : "")} data-field={`${name}Other`} style={{ marginTop: 12 }}>
           <label htmlFor={`${name}-other`}>Other – please specify</label>
-          <input id={`${name}-other`} value={otherValue} onChange={(e) => onOther(e.target.value)} required />
+          <input id={`${name}-other`} value={otherValue} onChange={(e) => onOther(e.target.value)} required aria-invalid={otherError ? true : undefined} />
+          {otherError && <p className="field-error" role="alert">{otherError}</p>}
         </div>
       )}
       {zoom && (
