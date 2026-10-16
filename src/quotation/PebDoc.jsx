@@ -18,7 +18,7 @@ export const PARTICULARS = ["Structural Design", "Structural Detailing", "Struct
 const DL = [["Design code", "AISC code"], ["Dead Load in kN/m2", "0.1"], ["Live Load in kN/m2", "0.57"], ["Collateral load kN/m2", "0"], ["Max wind speed in m/s", "44"], ["Max rainfall intensity in mm/hr.", "150"], ["Exposure category", "B"], ["Seismic zone co-efficient (III)", "0.24"], ["Maximum temperate variation", "20"]];
 const DF = [["Frames Vertical deflection", "Span/150"], ["Frames Horizontal deflection", "Height/100"], ["Purlins", "Span/150"], ["Girts", "Span/120"], ["Crane beams", "Span/600"], ["Mezzanine beams", "Span/240"], ["Misc", "NA"]];
 const AS = [["Hot rolled sections grade (Mpa)", "250"], ["Cold form sections grade (Mpa)", "350"], ["Primary sections grade (Mpa)", "350"], ["Building design condition", "Enclosed"], ["Minimum web thickness in mm", "4"], ["Minimum flange thickness in mm", "5"], ["Minimum flange width in mm", "125"], ["Minimum web depth in mm", "250"], ["Minimum cold form thickness in mm", "1.5"], ["Sheeting profile width & length in m", "1.22 & 7.65"], ["Connection bolts grade", "High strength bolts (ASTM A325 or equivalent)"]];
-const IDN = ["Building Description", "Standard Supplied Material", "Material Specification", "Steel Work Finish", "Completion Period", "Proposal validity", "Prices", "Assumptions & Deviations", "Force Majeure Clause"];
+export const IDN = ["Building Description", "Standard Supplied Material", "Material Specification", "Steel Work Finish", "Completion Period", "Proposal validity", "Prices", "Assumptions & Deviations", "Force Majeure Clause"];
 const SHEET = "Providing and Fixing of single Skin Senela Profile, Overall Width of 1060 mm and covered width of 1000mm, with six Crests (29mm crest height, width of 25 mm at the top of the crest and 74 mm at the base of the crest), spaced at 200 mm - crest centre to centre, and with two stiffening ribs (20mm) at the centre of each valley of the sheet, with two anti-capillary grooves (5 mm) on either side of each crest making the Trapezoidal Profile the best in the Industry in terms of appearance, strength and cost effectiveness.";
 
 /* ---------- helpers ---------- */
@@ -31,7 +31,7 @@ export const rowArea = (r) => {
 };
 export const rowAmount = (r) => rowArea(r) * (Number(r.rate) || 0);
 const num = (n) => String(Math.round(Number(n) * 100) / 100);
-const cityTitle = (s) => String(s || "").toLowerCase().replace(/(^|\s)\S/g, (c) => c.toUpperCase());
+export const cityTitle = (s) => String(s || "").toLowerCase().replace(/(^|\s)\S/g, (c) => c.toUpperCase());
 const NAf = (a) => a.map((v) => String(v || "").trim() || "NA");
 export const effv = (d) => ({
   Bv: NAf(d.b),
@@ -61,7 +61,8 @@ const Sign = () => h("img", { src: SIG, alt: "Managing Director signature", styl
 export const DEFAULT_OPTIONAL = ["i)  Civil Works: RCC foundations, footings, flooring, and civil masonry works are excluded from the above scope and will be quoted separately, if required to be included in our scope.", "ii)  Roof Ventilator will be charged at Rs.7500/- per piece.", "iii)  Doors & Windows will be charged at actual.", "iv)  Transport will be extra at actual."];
 export const optionalLines = (d) => (Array.isArray(d.optionalText) && d.optionalText.length ? d.optionalText : DEFAULT_OPTIONAL);
 
-function mk(d) {
+/** The content blocks of pages 3+ (shared with the Word export in buildPebDocx.js). */
+export function mk(d) {
   const Bk = [];
   const add = (el, o) => Bk.push({ el: typeof el === "function" ? el : () => el, ...o });
   const sp = (n) => add(h("div", { style: { height: n || 8 } }), { sp: 1 });

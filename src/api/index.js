@@ -14,13 +14,15 @@ export function getLeads({ status, search, page = 0, size = 20 } = {}) {
   return request(`/api/leads?${params.toString()}`, { auth: true });
 }
 
+/** Permanently deletes a lead with its enquiry, quotations, order and WhatsApp history. */
+export const deleteLead = (id) => request(`/api/leads/${id}`, { method: "DELETE", auth: true });
 export const createLead = (payload) => request("/api/leads", { method: "POST", body: payload, auth: true });
 export const getLeadDetail = (id) => request(`/api/leads/${id}/detail`, { auth: true });
 export const resendWelcome = (id) => request(`/api/leads/${id}/resend-welcome`, { method: "POST", auth: true });
 /** payload: { items: [{ description, quantity, unitPrice }], discount?, taxPercentage? } */
 export const generateQuotation = (leadId, payload = {}) =>
   request(`/api/quotations/generate/${leadId}`, { method: "POST", body: payload, auth: true });
-/** Replaces the quotation's stored PDF (the 8-page PEB format built in the browser). */
+/** Replaces the quotation's stored PDF: the PEB PDF built in the browser, or a PDF edited in Word and uploaded by the employee. */
 export async function uploadQuotationPdf(id, blob) {
   const session = sessionStorageHelper.read();
   const res = await fetch(apiUrl(`/api/quotations/${id}/pdf`), {
@@ -28,7 +30,11 @@ export async function uploadQuotationPdf(id, blob) {
     headers: { "Content-Type": "application/pdf", ...(session ? { Authorization: `Bearer ${session.token}` } : {}) },
     body: blob,
   });
-  if (!res.ok) throw new Error(res.status === 401 ? "Session expired - please sign in again." : "Could not save the quotation PDF (" + res.status + ").");
+  if (!res.ok) {
+    let msg = "";
+    try { msg = (await res.json()).message || ""; } catch { /* no JSON body */ }
+    throw new Error(res.status === 401 ? "Session expired - please sign in again." : msg || "Could not save the quotation PDF (" + res.status + ").");
+  }
   return res.json();
 }
 export const sendQuotation = (id) => request(`/api/quotations/${id}/send`, { method: "POST", auth: true });

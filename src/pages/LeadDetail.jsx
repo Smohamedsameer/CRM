@@ -1,7 +1,7 @@
 import { Fragment, useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
-  clearWhatsAppHistory, confirmOrder, getLeadDetail, resendWelcome, retryMessage, sendQuotation, viewQuotationPdf,
+  clearWhatsAppHistory, confirmOrder, getLeadDetail, resendWelcome, retryMessage, sendQuotation, uploadQuotationPdf, viewQuotationPdf,
 } from "../api/index.js";
 import Alert from "../components/Alert.jsx";
 import QuoteBuilder from "../components/QuoteBuilder.jsx";
@@ -11,6 +11,9 @@ import { formatDateTime, labelize, money } from "../utils/format.js";
 import { gfLabel } from "../utils/constants.js";
 
 const EXTRA_STATUSES = ["CHANGES_REQUESTED", "REJECTED", "CLOSED"];
+/** Statuses where the quotation was already sent once, so the button says "Re-send". */
+const RESENDABLE = ["SENT", "VIEWED", "CHANGES_REQUESTED"];
+const MAX_PDF_MB = 15;
 
 /** Most recent "request changes" note the customer left on this quotation, if any. */
 function latestChangeRequest(quotation) {
@@ -63,6 +66,33 @@ export default function LeadDetail() {
     } finally {
       setBusy("");
     }
+  }
+
+  /** The employee fixed the alignment in Word, saved it as PDF and picked it here: it replaces the quotation's PDF. */
+  function handlePdfPicked(q, event) {
+    const file = event.target.files?.[0];
+    event.target.value = ""; // allow picking the same file again
+    if (!file) return;
+    if (/\.docx?$/i.test(file.name)) {
+      setNotice({ type: "error", text: "Please save the Word file as PDF first (File → Save As → PDF), then upload the PDF." });
+      return;
+    }
+    if (file.type !== "application/pdf" && !/\.pdf$/i.test(file.name)) {
+      setNotice({ type: "error", text: "Please choose a PDF file." });
+      return;
+    }
+    if (file.size > MAX_PDF_MB * 1024 * 1024) {
+      setNotice({ type: "error", text: `The PDF is larger than ${MAX_PDF_MB} MB. Reduce its size and try again.` });
+      return;
+    }
+    run(`upload-${q.id}`, () => uploadQuotationPdf(q.id, file),
+      `PDF for ${q.quotationNumber} replaced. Click “View PDF” to check it, then send it to the customer.`);
+  }
+
+  function handleSend(q) {
+    const again = RESENDABLE.includes(q.status);
+    if (again && !window.confirm(`Send ${q.quotationNumber} to the customer on WhatsApp again?`)) return;
+    run(`send-${q.id}`, () => sendQuotation(q.id), again ? "Quotation sent again via WhatsApp." : "Quotation sent via WhatsApp.");
   }
 
   if (loadError) {
@@ -262,10 +292,16 @@ export default function LeadDetail() {
                               onClick={() => run(`pdf-${q.id}`, () => viewQuotationPdf(q.id), null)}>
                               {busy === `pdf-${q.id}` ? "Opening…" : "View PDF"}
                             </button>
-                            {q.status === "GENERATED" && (
-                              <button type="button" className="btn btn-secondary btn-sm" disabled={!!busy}
-                                onClick={() => run(`send-${q.id}`, () => sendQuotation(q.id), "Quotation sent via WhatsApp.")}>
-                                {busy === `send-${q.id}` ? "Sending…" : "Send via WhatsApp"}
+                            {q.status !== "ACCEPTED" && (
+                              <label className={`btn btn-secondary btn-sm${busy ? " disabled" : ""}`} style={{ cursor: busy ? "not-allowed" : "pointer", opacity: busy ? 0.6 : 1 }}
+                                title="Upload the PDF you edited in Word - it replaces the generated PDF">
+                                {busy === `upload-${q.id}` ? "Uploading…" : "Upload edited PDF"}
+                                <input type="file" accept="application/pdf,.pdf" hidden disabled={!!busy} onChange={(ev) => handlePdfPicked(q, ev)} />
+                              </label>
+                            )}
+                            {(q.status === "GENERATED" || RESENDABLE.includes(q.status)) && (
+                              <button type="button" className="btn btn-secondary btn-sm" disabled={!!busy} onClick={() => handleSend(q)}>
+                                {busy === `send-${q.id}` ? "Sending…" : RESENDABLE.includes(q.status) ? "Re-send via WhatsApp" : "Send via WhatsApp"}
                               </button>
                             )}
                           </div>

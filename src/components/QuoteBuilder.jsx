@@ -4,6 +4,7 @@ import Alert from "../components/Alert.jsx";
 import { money } from "../utils/format.js";
 import { PebDoc, PARTICULARS, DEFAULT_OPTIONAL, rowArea, rowAmount, inr } from "../quotation/PebDoc.jsx";
 import { buildPebPdf } from "../quotation/buildPebPdf.js";
+import { buildPebDocx, downloadBlob } from "../quotation/buildPebDocx.js";
 import { defaultsFromLead, newRow } from "../quotation/pebDefaults.js";
 import logoUrl from "../quotation/assets/logo.png";
 
@@ -121,7 +122,7 @@ export default function QuoteBuilder({ lead, onGenerated, onCancel }) {
     return "";
   }
 
-  /** mode: "save" = create + store the PDF; "send" = also send it to the customer on WhatsApp */
+  /** mode: "save" = create + store the PDF; "send" = also send it to the customer on WhatsApp; "word" = also download an editable Word file */
   async function build(mode) {
     const problem = validate();
     if (problem) return setError(problem);
@@ -148,6 +149,18 @@ export default function QuoteBuilder({ lead, onGenerated, onCancel }) {
           onGenerated(q, `Quotation ${q.quotationNumber} was saved, but WhatsApp sending failed (${err.message}). Use “Send via WhatsApp” in the Quotations list to retry.`, "error");
           return;
         }
+      }
+      if (mode === "word") {
+        setStage("Preparing the Word file…");
+        try {
+          const ref = d.ref.trim() || q.quotationNumber;
+          downloadBlob(await buildPebDocx(assemble({ ref }), logoUrl), `${q.quotationNumber.replace(/\//g, "-")}.docx`);
+        } catch (err) {
+          onGenerated(q, `Quotation ${q.quotationNumber} was generated, but the Word file could not be created (${err.message}).`, "error");
+          return;
+        }
+        onGenerated(q, `Quotation ${q.quotationNumber} generated and the Word file downloaded. Fix the alignment in Word, save it as PDF, then use “Upload edited PDF” on this quotation below and send it.`);
+        return;
       }
       onGenerated(q, mode === "send" ? `Quotation ${q.quotationNumber} generated and sent via WhatsApp.` : `Quotation ${q.quotationNumber} generated. Send it from the Quotations list below.`);
     } catch (err) {
@@ -251,6 +264,7 @@ export default function QuoteBuilder({ lead, onGenerated, onCancel }) {
       <div className="row actions">
         <button type="button" className="btn btn-secondary" onClick={() => setSnap(assemble({ ref: d.ref.trim() || "(preview)" }))} disabled={submitting}>{previewData ? "Refresh preview" : "Preview"}</button>
         <button type="submit" className="btn btn-primary" disabled={submitting}>{submitting ? "Please wait…" : "Generate quotation"}</button>
+        <button type="button" className="btn btn-secondary" onClick={() => build("word")} disabled={submitting}>Generate &amp; download Word</button>
         <button type="button" className="btn btn-success" onClick={() => build("send")} disabled={submitting}>Generate &amp; send via WhatsApp</button>
         <button type="button" className="btn btn-secondary" onClick={onCancel} disabled={submitting}>Cancel</button>
       </div>

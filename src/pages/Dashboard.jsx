@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getLeads, getSummary } from "../api/index.js";
+import { deleteLead, getLeads, getSummary } from "../api/index.js";
 import Alert from "../components/Alert.jsx";
 import StatusBadge from "../components/StatusBadge.jsx";
 import LeadAnalytics from "../components/LeadAnalytics.jsx";
@@ -17,6 +17,9 @@ export default function Dashboard() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [deletingId, setDeletingId] = useState(null);
+  const [reloadKey, setReloadKey] = useState(0); // bump to reload the counts, the list and the graphs
 
   useEffect(() => {
     let cancelled = false;
@@ -24,7 +27,7 @@ export default function Dashboard() {
       .then((data) => !cancelled && setSummary(data))
       .catch((err) => !cancelled && setError(err.message));
     return () => { cancelled = true; };
-  }, []);
+  }, [reloadKey]);
 
   useEffect(() => {
     let cancelled = false;
@@ -33,7 +36,30 @@ export default function Dashboard() {
       .then((data) => !cancelled && setLeadsPage(data))
       .catch((err) => !cancelled && setError(err.message));
     return () => { cancelled = true; };
-  }, [status, search, page]);
+  }, [status, search, page, reloadKey]);
+
+  async function handleDelete(lead) {
+    const ok = window.confirm(
+      `Delete ${lead.leadCode} (${lead.customerName})?\n\n` +
+      "This permanently deletes the lead together with its enquiry form, quotations, order and WhatsApp / chat history. " +
+      "This can't be undone."
+    );
+    if (!ok) return;
+    setDeletingId(lead.id);
+    setError("");
+    setNotice("");
+    try {
+      await deleteLead(lead.id);
+      setNotice(`${lead.leadCode} deleted.`);
+      // deleted the only lead on this page: go back one page, otherwise just reload
+      if (leads.length === 1 && page > 0) setPage((p) => p - 1);
+      setReloadKey((k) => k + 1);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   function handleSearch(e) {
     e.preventDefault();
@@ -55,6 +81,7 @@ export default function Dashboard() {
   return (
     <div className="container wide">
       <Alert>{error}</Alert>
+      <Alert type="success">{notice}</Alert>
 
       <div className="stat-grid">
         {SUMMARY_CARDS.map(([key, label]) => (
@@ -106,7 +133,19 @@ export default function Dashboard() {
                   <td>{labelize(lead.source)}</td>
                   <td><StatusBadge status={lead.status} /></td>
                   <td>{formatDate(lead.createdAt)}</td>
-                  <td><Link to={`/leads/${lead.id}`}>View</Link></td>
+                  <td>
+                    <div className="table-row-actions" style={{ alignItems: "center" }}>
+                      <Link to={`/leads/${lead.id}`}>View</Link>
+                      <button
+                        type="button"
+                        className="btn btn-danger btn-sm"
+                        disabled={deletingId === lead.id}
+                        onClick={() => handleDelete(lead)}
+                      >
+                        {deletingId === lead.id ? "Deleting…" : "Delete"}
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -143,7 +182,7 @@ export default function Dashboard() {
         )}
       </div>
 
-      <LeadAnalytics />
+      <LeadAnalytics key={reloadKey} />
        <footer className="dash-footer">
         <p>&copy; {new Date().getFullYear()}<span> Senela International Ventures</span>. All rights reserved.</p>
         <p className="dash-footer-dev">Developed by <span>Mohd Sameer</span></p>
