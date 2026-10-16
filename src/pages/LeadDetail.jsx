@@ -109,10 +109,10 @@ export default function LeadDetail() {
   }
 
   if (loadError) {
-    return <div className="container"><Alert>{loadError}</Alert></div>;
+    return <div className="container wide"><Alert>{loadError}</Alert></div>;
   }
   if (!lead) {
-    return <div className="container"><p className="muted">Loading lead…</p></div>;
+    return <div className="container wide"><p className="muted">Loading lead…</p></div>;
   }
 
   const e = lead.enquiry;
@@ -193,7 +193,7 @@ export default function LeadDetail() {
   const enquiryRows = extra.v === 2 ? v2Rows : [...baseRows, ...extraRows];
 
   return (
-    <div className="container">
+    <div className="container wide">
       <Alert>{notice?.type === "error" ? notice.text : ""}</Alert>
       <Alert type="success">{notice?.type === "success" ? notice.text : ""}</Alert>
 

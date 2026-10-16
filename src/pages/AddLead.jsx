@@ -50,7 +50,7 @@ export default function AddLead() {
   }
 
   return (
-    <div className="container">
+    <div className="container wide">
       <div className="card">
         <h2>Add lead</h2>
         <Alert>{error}</Alert>

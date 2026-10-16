@@ -87,7 +87,7 @@ export default function ClientRequests() {
   }
 
   return (
-    <div className="container">
+    <div className="container wide">
       <h2>Client Request</h2>
       <Alert>{error}</Alert>
 
