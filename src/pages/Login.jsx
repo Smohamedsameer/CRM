@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { login } from "../api/index.js";
-import { useAuth } from "../auth/AuthContext.jsx";
+import { EXPIRED_FLAG, useAuth } from "../auth/AuthContext.jsx";
 import Alert from "../components/Alert.jsx";
 
 export default function Login() {
@@ -12,6 +12,13 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  // Shown when the employee was sent here because the session expired.
+  const [notice] = useState(() => {
+    try { return sessionStorage.getItem(EXPIRED_FLAG) === "1" ? "Your session has expired. Please log in again." : ""; } catch { return ""; }
+  });
+  useEffect(() => {
+    try { sessionStorage.removeItem(EXPIRED_FLAG); } catch { /* ignore */ }
+  }, []);
 
   if (session) return <Navigate to="/dashboard" replace />;
 
@@ -33,7 +40,7 @@ export default function Login() {
     <div className="container narrow login-wrap">
       <div className="card">
         <h2>Employee login</h2>
-        <Alert>{error}</Alert>
+        <Alert>{error || notice}</Alert>
         <form onSubmit={handleSubmit}>
           <div className="field">
             <label htmlFor="email">Email</label>

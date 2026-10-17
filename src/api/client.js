@@ -22,6 +22,23 @@ export const sessionStorageHelper = {
   },
 };
 
+/** Reads the "exp" claim of a JWT (without verifying it) and returns it in milliseconds, or null. */
+export function tokenExpiryMs(token) {
+  try {
+    const part = token.split(".")[1];
+    const b64 = part.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(part.length / 4) * 4, "=");
+    const exp = JSON.parse(atob(b64)).exp;
+    return typeof exp === "number" ? exp * 1000 : null;
+  } catch {
+    return null;
+  }
+}
+
+export function isTokenExpired(token) {
+  const ms = tokenExpiryMs(token);
+  return ms !== null && ms <= Date.now();
+}
+
 let onUnauthorized = null;
 export function setUnauthorizedHandler(fn) {
   onUnauthorized = fn;
@@ -43,6 +60,11 @@ export async function request(path, { method = "GET", body, auth = false } = {})
   if (body !== undefined) headers["Content-Type"] = "application/json";
   if (auth) {
     const session = sessionStorageHelper.read();
+    if (session && isTokenExpired(session.token)) {
+      // Already expired: don't even call the server - sign out, which redirects to the login page.
+      if (onUnauthorized) onUnauthorized();
+      throw new ApiError("Your session has expired. Please log in again.", 401);
+    }
     if (session) headers.Authorization = `Bearer ${session.token}`;
   }
 
@@ -87,6 +109,10 @@ export const apiUrl = (path) => `${BASE}${path}`;
  */
 export async function openAuthedPdf(path) {
   const session = sessionStorageHelper.read();
+  if (session && isTokenExpired(session.token)) {
+    if (onUnauthorized) onUnauthorized();
+    throw new ApiError("Your session has expired. Please log in again.", 401);
+  }
   const headers = session ? { Authorization: `Bearer ${session.token}` } : {};
 
   let res;

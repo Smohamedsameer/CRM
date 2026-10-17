@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { generateQuotation, getPricingSettings, saveQuotationFormData, uploadQuotationPdf } from "../api/index.js";
+import { generateQuotation, getPricingSettings, sendQuotation, uploadQuotationPdf } from "../api/index.js";
 import Alert from "../components/Alert.jsx";
 import { money } from "../utils/format.js";
-import { PebDoc, PARTICULARS, DEFAULT_OPTIONAL, rowArea, rowAmount, inr } from "../quotation/PebDoc.jsx";
+import { PebDoc, PARTICULARS, DEFAULT_OPTIONAL, rowArea, rowAmount } from "../quotation/PebDoc.jsx";
 import { buildPebPdf } from "../quotation/buildPebPdf.js";
 import { defaultsFromLead, newRow } from "../quotation/pebDefaults.js";
 import logoUrl from "../quotation/assets/logo.png";
@@ -88,7 +88,6 @@ export default function QuoteBuilder({ lead, onGenerated, onCancel }) {
     }).catch(() => {});
   }, []);
 
-  const total = d.reqs.reduce((a, r) => a + rowAmount(r), 0);
 
   const assemble = (extra = {}) => ({
     ...d, date: d.date || todayIso(),
@@ -121,8 +120,8 @@ export default function QuoteBuilder({ lead, onGenerated, onCancel }) {
     return "";
   }
 
-  /** Creates the quotation, builds + stores its PDF, and remembers the details (for "Download Word" later). */
-  async function build() {
+  /** mode: "save" = create + store the PDF; "send" = also send it to the customer on WhatsApp */
+  async function build(mode) {
     const problem = validate();
     if (problem) return setError(problem);
     setError("");
@@ -142,14 +141,14 @@ export default function QuoteBuilder({ lead, onGenerated, onCancel }) {
       const blob = await buildPebPdf(assemble({ ref: d.ref.trim() || q.quotationNumber }), logoUrl);
       setStage("Saving the PDF…");
       await uploadQuotationPdf(q.id, blob);
-      let wordNote = "";
-      try {
-        setStage("Saving the quotation details…");
-        await saveQuotationFormData(q.id, assemble({ ref: d.ref.trim() || q.quotationNumber }));
-      } catch {
-        wordNote = " (The details for “Download Word” could not be saved.)";
+      if (mode === "send") {
+        setStage("Sending on WhatsApp…");
+        try { await sendQuotation(q.id); } catch (err) {
+          onGenerated(q, `Quotation ${q.quotationNumber} was saved, but WhatsApp sending failed (${err.message}). Use “Send via WhatsApp” in the Quotations list to retry.`, "error");
+          return;
+        }
       }
-      onGenerated(q, `Quotation ${q.quotationNumber} generated. In the Quotations list below you can View it, Download Word, Upload PDF and Send via WhatsApp.${wordNote}`, wordNote ? "error" : "success");
+      onGenerated(q, mode === "send" ? `Quotation ${q.quotationNumber} generated and sent via WhatsApp.` : `Quotation ${q.quotationNumber} generated. Send it from the Quotations list below.`);
     } catch (err) {
       setSubmitting(false);
       setStage("");
@@ -162,7 +161,7 @@ export default function QuoteBuilder({ lead, onGenerated, onCancel }) {
   const previewData = useMemo(() => snap, [snap]);
 
   return (
-    <form className="quote-builder" onSubmit={(e) => { e.preventDefault(); build(); }}>
+    <form className="quote-builder" onSubmit={(e) => { e.preventDefault(); build("save"); }}>
       <p className="muted">
         Enter the ref no, date, cover image and the Section 7 prices. The <strong>To</strong> address comes from the lead, and the building / requirement details come from the customer's form – they are filled into the quotation automatically.
       </p>
@@ -240,17 +239,11 @@ export default function QuoteBuilder({ lead, onGenerated, onCancel }) {
         </button>
       </div>
 
-      <div className="quote-summary">
-        {d.reqs.map((r, i) => (
-          <div className="row" key={r.id}><span className="muted">{i + 1}. {r.title || "—"} ({inr(rowArea(r))} sq ft × ₹{inr(r.rate)})</span><span>{money(rowAmount(r))}</span></div>
-        ))}
-        <div className="row total-row"><span>Total (GST 18% extra)</span><span>{money(total)}</span></div>
-      </div>
-
       {submitting && <p className="muted" role="status">{stage}</p>}
       <div className="row actions">
         <button type="button" className="btn btn-secondary" onClick={() => setSnap(assemble({ ref: d.ref.trim() || "(preview)" }))} disabled={submitting}>{previewData ? "Refresh preview" : "Preview"}</button>
         <button type="submit" className="btn btn-primary" disabled={submitting}>{submitting ? "Please wait…" : "Generate quotation"}</button>
+        <button type="button" className="btn btn-success" onClick={() => build("send")} disabled={submitting}>Generate &amp; send via WhatsApp</button>
         <button type="button" className="btn btn-secondary" onClick={onCancel} disabled={submitting}>Cancel</button>
       </div>
 
