@@ -123,7 +123,7 @@ export async function buildPebDocx(d, logo) {
       d.gst ? [h("br", { key: "b4" }), "GSTIN: " + d.gst + "."] : null),
     h("p", { style: { marginTop: 22 } }, "Sub: Supply & Erection of Pre-Engineered Building (PEB) for your " + String(d.project || "").toUpperCase() + " Project" + cityPart + " - reg"),
     h("p", null, "Dear Sir,"),
-    h("p", null, "With reference to your inquiry, and subsequent discussion we had had with you, please find enclosed here with our proposal for your kind perusal."),
+    h("p", null, "With reference to your enquiry, and subsequent discussion we had with you, please find enclosed here with our proposal for your kind perusal."),
     h("p", null, "We believe that our Indexed Proposal / Offer will facilitate easy reference."),
     h("p", null, "In case you do require any further clarifications, please feel free to revert to the undersigned with your queries."),
     h("p", null, "Thanking you and assuring you of our best services at all times, we remain,"),

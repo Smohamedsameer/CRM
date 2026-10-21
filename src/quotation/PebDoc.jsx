@@ -97,11 +97,12 @@ export function mk(d) {
     const grp = (title, labels, vals) => tbl([title, H("S.No.", "Parameter", "Details"), ...rows(labels, NAf(labels.map((_, i) => (vals || [])[i])))]);
     grp("BUILDING TYPE", BL2, d.b);
     grp("ROOF & CLADDING", RL2, d.r);
-    grp("CRANE REQUIREMENTS", CR2, d.cr);
-    grp("GUTTER", GT2, d.g);
-    grp("VENTILATOR", VT2, d.v);
-    grp("CANOPY", CN2, d.cn);
-    grp("LOUVER", LV2, d.l);
+    const on = (k) => !d.show || d.show[k] !== false; // no "show" info = print everything
+    if (on("cr")) grp("CRANE REQUIREMENTS", CR2, d.cr);
+    if (on("g")) grp("GUTTER", GT2, d.g);
+    if (on("v")) grp("VENTILATOR", VT2, d.v);
+    if (on("cn")) grp("CANOPY", CN2, d.cn);
+    if (on("l")) grp("LOUVER", LV2, d.l);
     tbl(DLtbl);
   } else {
     // quotations saved before format 2 keep their original layout
@@ -196,7 +197,7 @@ function buildPages(d, lay, B, logo) {
       d.gst ? [h("br", { key: "b4" }), "GSTIN: " + d.gst + "."] : null),
     h("p", { key: "s", style: { marginTop: 22 } }, "Sub: Supply & Erection of Pre-Engineered Building (PEB) for your " + d.project.toUpperCase() + " Project" + (d.loc ? " at " + cityTitle(d.loc) : "") + " - reg"),
     h("p", { key: "a" }, "Dear Sir,"),
-    h("p", { key: "b" }, "With reference to your inquiry, and subsequent discussion we had had with you, please find enclosed here with our proposal for your kind perusal."),
+    h("p", { key: "b" }, "With reference to your enquiry, and subsequent discussion we had with you, please find enclosed here with our proposal for your kind perusal."),
     h("p", { key: "c" }, "We believe that our Indexed Proposal / Offer will facilitate easy reference."),
     h("p", { key: "e" }, "In case you do require any further clarifications, please feel free to revert to the undersigned with your queries."),
     h("p", { key: "f" }, "Thanking you and assuring you of our best services at all times, we remain,"),

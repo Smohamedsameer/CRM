@@ -58,10 +58,10 @@ export function defaultsFromLead(lead, rate = "") {
     pick(x.eaveHeight, e.eaveHeightM),
     v2 ? x.clearEaveHeight || "" : dist(e.clearEaveHeightM),
     pick(x.length, e.lengthM),
-    pick(x.intermediateSpacing, e.intermediateBaySpacingM),
-    pick(x.gableBaySpacing, e.endBaySpacingM),
+    pick(x.intermediateSpacing, e.intermediateBaySpacingM) || "As per design",
+    pick(x.gableBaySpacing, e.endBaySpacingM) || "As per design",
     pick(x.brickWallHeight, e.brickWallHeightM),
-    e.roofSlope || x.roofSlope || "",
+    e.roofSlope || x.roofSlope || "1:10",
   ];
 
   // ---- ROOF & CLADDING ----
@@ -72,15 +72,16 @@ export function defaultsFromLead(lead, rate = "") {
   const r = [
     labelOrOther(e.roofingCladdingRequirement, x.roofingReqOther),
     roofMat, clad,
-    withUnit(x.thickness || e.roofCladdingThickness, "mm"),
-    String(x.colour || e.roofCladdingColour || "").replace(/^RAL\s*/i, ""),
+    withUnit(x.thickness || e.roofCladdingThickness, "mm") || "0.47mm",
+    String(x.colour || e.roofCladdingColour || "").replace(/^RAL\s*/i, "") || "As per your requirements",
     prep,
-    labelOrOther(x.coating || e.protectiveCoating, x.coatingOther || e.protectiveCoatingOther),
+    labelOrOther(x.coating || e.protectiveCoating, x.coatingOther || e.protectiveCoatingOther) || "As per your requirements",
   ];
 
   // ---- CRANE REQUIREMENTS ----
   const craneOn = !!e.craneRequired;
-  const cr = craneOn ? [e.craneType || "", e.craneCapacityTonnes || "", e.craneHeightM || ""] : ["", "", ""];
+  const AYR = "As per your requirements"; // default when the customer left a crane detail blank
+  const cr = craneOn ? [e.craneType || AYR, e.craneCapacityTonnes || AYR, e.craneHeightM || AYR] : ["", "", ""];
 
   // ---- GUTTER ----
   const gc = x.gutterChoices || [];
@@ -97,7 +98,7 @@ export function defaultsFromLead(lead, rate = "") {
   const v = [vent];
 
   // ---- CANOPY / LOUVER ----
-  const cn = yes(x.canopy) ? [x.canopySize || "", x.canopyHeightFfl || ""] : [x.canopy === "other" ? x.canopyOther || "" : "", ""];
+  const cn = yes(x.canopy) ? [x.canopySize || "As per your dimension", x.canopyHeightFfl || "As per design"] : [x.canopy === "other" ? x.canopyOther || "" : "", ""];
   const l = [yes(x.louver) ? x.louverSize || "" : x.louver === "other" ? x.louverOther || "" : ""];
 
   return {
@@ -110,6 +111,14 @@ export function defaultsFromLead(lead, rate = "") {
     project: lead.projectName || (typeLabel ? `${typeLabel} building` : "PEB building"), // Project Name from Add Lead -> cover title & subject
     cover: "",                                     // optional cover picture; no picture = no cover page
     fmt: 2,                                        // Building Description in the enquiry-form layout (see PebDoc.mk)
+    // a table is printed only when the customer asked for that item ("Not required" / unanswered = no table)
+    show: {
+      cr: craneOn,
+      g: gutterOn,
+      v: vc.length ? !vc.includes("NOT_REQUIRED") : e.roofVentilatorRequired === true,
+      cn: x.canopy === "yes" || x.canopy === "other",
+      l: x.louver === "yes" || x.louver === "other",
+    },
     b, r, cr, g, v, cn, l,
     reqs: requirementRows(e, x, typeLabel),
     rate,
