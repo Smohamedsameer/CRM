@@ -55,7 +55,7 @@ function Ticks({ status }) {
 
 function windowText(closesAt) {
   const ms = new Date(closesAt).getTime() - Date.now();
-  if (ms <= 0) return "Reply window closed";
+  if (ms <= 0) return "Template mode";
   const h = Math.floor(ms / 3_600_000);
   const m = Math.floor((ms % 3_600_000) / 60_000);
   return `${h}h ${m}m left`;
@@ -161,10 +161,10 @@ function ChatThread({ leadId, onChanged, onBack }) {
           <div className="chat-head-name">{lead.customerName}</div>
           <div className="chat-head-sub">{lead.phone} · {lead.leadCode}</div>
         </div>
-        <span className={`chat-window ${windowOpen ? "open" : "closed"}`}>
+        <span className={`chat-window ${windowOpen ? "open" : "closed"}`} title={windowOpen ? "The customer wrote in the last 24 hours: your messages go as normal chat messages." : "The customer has not written in the last 24 hours: your message is sent as an approved WhatsApp template."}>
           {windowOpen
-            ? <><span className="chat-window-long">Can reply · </span>{windowText(windowClosesAt)}</>
-            : <>Window closed</>}
+            ? <><span className="chat-window-long">Free chat · </span>{windowText(windowClosesAt)}</>
+            : <>Template mode</>}
         </span>
         <Link to={`/leads/${lead.id}`} className="btn btn-secondary btn-sm chat-viewlead">View lead</Link>
       </div>
@@ -205,28 +205,27 @@ function ChatThread({ leadId, onChanged, onBack }) {
 
       {error && <div className="chat-error">{error}</div>}
 
-      {windowOpen ? (
-        <div className="chat-composer">
-          <textarea
-            rows={Math.min(5, Math.max(1, text.split("\n").length))}
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            onKeyDown={onKeyDown}
-            placeholder="Type a message"
-            title="Enter to send, Shift+Enter for a new line"
-            maxLength={4096}
-          />
-          <button type="button" className="chat-send" onClick={send} disabled={sending || !text.trim()} aria-label="Send">
-            <SendIcon />
-          </button>
-        </div>
-      ) : (
+      {!windowOpen && (
         <div className="chat-closed-note">
           {customerHasWritten
-            ? "The 24-hour reply window has closed. You can reply again as soon as the customer messages you."
-            : "WhatsApp only allows free-text messages after the customer writes to you. You can reply here as soon as they answer."}
+            ? "The customer has not messaged in the last 24 hours, so your message will be sent as an approved WhatsApp template message."
+            : "You can message this customer first. Your message is sent as an approved WhatsApp template message."}
         </div>
       )}
+      <div className="chat-composer">
+        <textarea
+          rows={Math.min(5, Math.max(1, text.split("\n").length))}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={onKeyDown}
+          placeholder="Type a message"
+          title="Enter to send, Shift+Enter for a new line"
+          maxLength={windowOpen ? 4096 : 900}
+        />
+        <button type="button" className="chat-send" onClick={send} disabled={sending || !text.trim()} aria-label="Send">
+          <SendIcon />
+        </button>
+      </div>
     </>
   );
 }
@@ -315,7 +314,7 @@ export default function Chat() {
         ) : (
           <div className="chat-empty muted">
             <h3>WhatsApp chats</h3>
-            <p>Select a lead on the left to see the messages and reply.</p>
+            <p>Select a lead on the left to read the messages and send a message.</p>
           </div>
         )}
       </section>

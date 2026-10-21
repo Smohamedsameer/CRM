@@ -13,6 +13,14 @@ export const BL = ["Building type", "Type of Column", "Type of End Frame", "Leng
 export const CL = ["Canopy Extension ", "Slope", "Canopy clear height", "Eave extension", "Gable extension"];
 export const OL = ["Skylights (FRP or Poly carbonate 3.25m x 1m)", "Turbo Ventilators (600 mm throat diameter)", "Windows size", "Door size"];
 export const XL = ["Crane Capacity in kN", "Crane beam top height ", "Crane span ", "Crane starting point ", "Crane running length ", "Crane class", "Crane Type", "Type of Girder", "Bridge Weight in MT", "Hoist/Trolley Weight in MT", "Number of Wheels", "Wheel Load in MT", "Wheel Base in mm"];
+/* Building Description tables (format 2) - ONLY what the customer is asked in the enquiry form, same as the reference quotation PDF */
+export const BL2 = ["Type of Building", "Column Type", "End Frame Type", "Span / Building Width (mtr / ft)", "Eave Height (mtr / ft)", "Clear Eave Height (mtr / ft)", "Length (mtr / ft)", "Intermediate Column Spacing (mtr / ft)", "Gable End Bay Column Spacing (mtr / ft)", "Brick Wall Height (mtr / ft)", "Roof Slope"];
+export const RL2 = ["Roofing / Cladding Requirement", "Building Roof Material", "Building Cladding Material", "Roof / Cladding Sheet Thickness (mm)", "Roof / Cladding Sheet Colour (RAL Code)", "Surface Preparation", "Protective Coating (Primer / Finishing Paint)"];
+export const CR2 = ["Crane Type", "Crane Capacity (Tonnes)", "Crane Lifting Height (mtr / ft)"];
+export const GT2 = ["Gutter Required?", "Gutter Material", "Downpipe Material"];
+export const VT2 = ["Roof Ventilator Required?"];
+export const CN2 = ["Canopy Size (width * length)", "Canopy Height from FFL (mtr / ft)"];
+export const LV2 = ["Louver Size (width * length)"];
 export const PARTICULARS = ["Structural Design", "Structural Detailing", "Structural Fabrication", "Supply & Installation of structure", "Supply & Fixing of Roofing & cladding"];
 
 const DL = [["Design code", "AISC code"], ["Dead Load in kN/m2", "0.1"], ["Live Load in kN/m2", "0.57"], ["Collateral load kN/m2", "0"], ["Max wind speed in m/s", "44"], ["Max rainfall intensity in mm/hr.", "150"], ["Exposure category", "B"], ["Seismic zone co-efficient (III)", "0.24"], ["Maximum temperate variation", "20"]];
@@ -84,9 +92,23 @@ export function mk(d) {
   const grand = reqs.reduce((a, r) => a + rowAmount(r), 0);
 
   hd("Section 1. BUILDING DESCRIPTION", "Building Description");
-  tbl(["BUILDING DESCRIPTION", H("S.No.", "Parameter", "Details"), ...rows(BL, Bv), ...(d.cOn ? ["CANOPIES", ...rows(CL, Cv)] : [])]);
-  tbl([...(d.oOn ? ["OPENINGS, SKYLIGHTS & TURBO VENTS", ...rows(OL, Ov)] : []), "DESIGN & LOADING", H("Sr no.", "Parameter", "Details"), ...DL.map((r, i) => [i + 1, ...r]), H("Sr no.", "Parameter", "Details"), ...DF.map((r, i) => [i + 1, ...r]), H("Sr no.", "Assumption/Remark", "Details"), ...AS.map((r, i) => [i + 1, ...r])]);
-  if (d.xOn) tbl(["Crane 1", ...rows(XL, Xv)]);
+  const DLtbl = ["DESIGN & LOADING", H("Sr no.", "Parameter", "Details"), ...DL.map((r, i) => [i + 1, ...r]), H("Sr no.", "Parameter", "Details"), ...DF.map((r, i) => [i + 1, ...r]), H("Sr no.", "Assumption/Remark", "Details"), ...AS.map((r, i) => [i + 1, ...r])];
+  if (d.fmt === 2) {
+    const grp = (title, labels, vals) => tbl([title, H("S.No.", "Parameter", "Details"), ...rows(labels, NAf(labels.map((_, i) => (vals || [])[i])))]);
+    grp("BUILDING TYPE", BL2, d.b);
+    grp("ROOF & CLADDING", RL2, d.r);
+    grp("CRANE REQUIREMENTS", CR2, d.cr);
+    grp("GUTTER", GT2, d.g);
+    grp("VENTILATOR", VT2, d.v);
+    grp("CANOPY", CN2, d.cn);
+    grp("LOUVER", LV2, d.l);
+    tbl(DLtbl);
+  } else {
+    // quotations saved before format 2 keep their original layout
+    tbl(["BUILDING DESCRIPTION", H("S.No.", "Parameter", "Details"), ...rows(BL, Bv), ...(d.cOn ? ["CANOPIES", ...rows(CL, Cv)] : [])]);
+    tbl([...(d.oOn ? ["OPENINGS, SKYLIGHTS & TURBO VENTS", ...rows(OL, Ov)] : []), ...DLtbl]);
+    if (d.xOn) tbl(["Crane 1", ...rows(XL, Xv)]);
+  }
   hd("EXCLUSIONS:"); list(["1. Roof/wall extracts fans & other exhaust systems", "2. All doors/windows, rolling shutter", "3. Masonry work & supervision.", "4. Miscellaneous steel except as specified herein.", "5. Crane Girder and Accessories"]);
   hd("Section 2. Standard Supplied Items:", "Standard Supplied Material"); para("The materials supplied by Senela are as per the Standards applicable to Senela Buildings.");
   list(["1. Anchor Bolts.", "2. Flashing and Trims", "3. Closure Strips", "4. Sealing Tape", "5. Rod Bracing", "6. Connection Bolt", "7. Sheeting Fasteners"]);

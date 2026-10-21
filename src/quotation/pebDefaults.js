@@ -1,13 +1,9 @@
-import { BUILDING_TYPES, COLUMN_TYPES, CLADDING_MATERIALS, gfLabel } from "../utils/constants.js";
-import { BL, CL, OL, XL, PARTICULARS } from "./PebDoc.jsx";
+import { BUILDING_TYPES, COLUMN_TYPES, gfLabel } from "../utils/constants.js";
+import { PARTICULARS } from "./PebDoc.jsx";
 
 const labelOf = (list, v) => (list.find((o) => o.value === v) || {}).label || "";
 const ft = (m) => (m ? Math.round(Number(m) * 3.28084) : null);
 const dist = (m) => (m ? `${m} mtr (${ft(m)} ft)` : "");
-/** "CCGI (Colour Coated Galvanised Iron)" -> "CCGI" for the printed specification */
-const short = (v) => (v ? (gfLabel(v) || labelOf(CLADDING_MATERIALS, v) || v).replace(/\s*\((Colour|Colored)[^)]*\)/i, "") : "");
-const material = (m, other, thickness, colour) =>
-  [m === "OTHER" ? other : short(m), thickness && /mm/i.test(thickness) ? thickness : thickness ? `${thickness} mm` : "", colour && `RAL ${String(colour).replace(/^RAL\s*/i, "")}`].filter(Boolean).join(", ");
 
 export function parseExtra(enquiry) {
   try { return enquiry?.extraDetails ? JSON.parse(enquiry.extraDetails) : {}; } catch { return {}; }
@@ -39,48 +35,70 @@ function requirementRows(e, x, typeLabel) {
   return rows;
 }
 
+/** the customer's text for a field, or "" - a free-text answer wins, then the legacy numeric column */
+const withUnit = (text, unit) => (text && !new RegExp(unit, "i").test(text) ? `${text} ${unit}` : text || "");
+const yes = (v) => v === "yes";
+const labelOrOther = (value, other) => (value === "OTHER" ? other || "" : gfLabel(value) || "");
+
 /** Everything the quotation needs. Address / contact come from the Add Lead record, building details from the
- * customer's form. Pricing (length x width, area, rate) is left for the admin. */
+ * customer's enquiry form (ONLY the questions the form asks). Pricing (length x width, area, rate) is left for the admin. */
 export function defaultsFromLead(lead, rate = "") {
   const e = lead.enquiry || {};
   const x = parseExtra(e);
   const v2 = x.v === 2;
   const typeLabel = e.buildingType === "OTHER" ? (e.buildingTypeOther || x.buildingTypeOther) : (gfLabel(e.buildingType) || labelOf(BUILDING_TYPES, e.buildingType));
   const col = e.columnType === "OTHER" ? x.columnTypeOther : (labelOf(COLUMN_TYPES, e.columnType) || gfLabel(e.columnType));
-  const endFrame = e.endFrameType === "LIGHT_FRAME" ? "Light Frame" : e.endFrameType === "RIGID_FRAME" ? "Rigid Frame" : e.endFrameType === "OTHER" ? x.endFrameTypeOther : "";
+  const endFrame = e.endFrameType === "OTHER" ? x.endFrameTypeOther : (gfLabel(e.endFrameType) || "");
   const pick = (text, metres) => (v2 && text ? text : dist(metres));
-  const eave = pick(x.eaveHeight, e.eaveHeightM || e.clearEaveHeightM);
-  const clear = v2 ? x.clearEaveHeight : "";
-  const b = BL.map(() => "");
-  b[0] = typeLabel || "";
-  b[1] = col || "";
-  b[2] = endFrame;
-  b[3] = pick(x.length, e.lengthM);
-  b[4] = pick(x.spanWidth, e.spanWidthM);
-  b[5] = eave && clear ? `${eave} (clear ${clear})` : eave;
-  b[6] = b[5];
-  b[8] = e.roofSlope || x.roofSlope || "";
-  b[9] = pick(x.gableBaySpacing, e.endBaySpacingM);
-  b[10] = b[9];
-  b[11] = pick(x.intermediateSpacing, e.intermediateBaySpacingM);
-  b[12] = "Rod";
-  b[13] = "Rod";
-  b[14] = v2 ? material(x.roofMaterial, x.roofMaterialOther, x.thickness, x.colour) : material(e.roofCladdingMaterial, "", e.roofCladdingThickness, e.roofCladdingColour);
-  b[15] = v2 ? material(x.claddingMaterial, x.claddingMaterialOther, x.thickness, x.colour) : material(e.sideCladdingMaterial, "", e.sideCladdingThickness, e.sideCladdingColour);
-  b[16] = pick(x.brickWallHeight, e.brickWallHeightM);
 
-  const c = CL.map(() => "");
-  c[0] = x.canopySize || "";
-  c[2] = x.canopyHeightFfl || "";
-  const turbine = (x.roofVentilatorChoices || []).includes("TURBINE_VENTILATOR") || x.roofVent === "yes";
-  const o = OL.map(() => "");
-  o[0] = e.skylightRequired ? "Yes" : "";
-  o[1] = turbine ? [x.roofVentQty && `${x.roofVentQty} nos`, x.roofVentThroat && `throat ${x.roofVentThroat}`].filter(Boolean).join(", ") || "Yes" : "";
-  const xs = XL.map(() => "");
-  const tonnes = parseFloat(e.craneCapacityTonnes);
-  xs[0] = tonnes ? `${Math.round(tonnes * 10)} (${tonnes} Tons)` : e.craneCapacityTonnes || "";
-  xs[1] = e.craneHeightM || "";
-  xs[6] = e.craneType || "";
+  // ---- BUILDING TYPE ----
+  const b = [
+    typeLabel || "", col || "", endFrame,
+    pick(x.spanWidth, e.spanWidthM),
+    pick(x.eaveHeight, e.eaveHeightM),
+    v2 ? x.clearEaveHeight || "" : dist(e.clearEaveHeightM),
+    pick(x.length, e.lengthM),
+    pick(x.intermediateSpacing, e.intermediateBaySpacingM),
+    pick(x.gableBaySpacing, e.endBaySpacingM),
+    pick(x.brickWallHeight, e.brickWallHeightM),
+    e.roofSlope || x.roofSlope || "",
+  ];
+
+  // ---- ROOF & CLADDING ----
+  const roofMat = v2 ? labelOrOther(x.roofMaterial, x.roofMaterialOther) : (gfLabel(e.roofCladdingMaterial) || "");
+  const clad = v2 ? labelOrOther(x.claddingMaterial, x.claddingMaterialOther) : (gfLabel(e.sideCladdingMaterial) || "");
+  const prep = (v2 ? x.surfacePrep || [] : String(e.surfacePreparation || "").split(",").filter(Boolean))
+    .map((p) => (p === "OTHER" ? x.surfacePrepOther : gfLabel(p))).filter(Boolean).join(", ");
+  const r = [
+    labelOrOther(e.roofingCladdingRequirement, x.roofingReqOther),
+    roofMat, clad,
+    withUnit(x.thickness || e.roofCladdingThickness, "mm"),
+    String(x.colour || e.roofCladdingColour || "").replace(/^RAL\s*/i, ""),
+    prep,
+    labelOrOther(x.coating || e.protectiveCoating, x.coatingOther || e.protectiveCoatingOther),
+  ];
+
+  // ---- CRANE REQUIREMENTS ----
+  const craneOn = !!e.craneRequired;
+  const cr = craneOn ? [e.craneType || "", e.craneCapacityTonnes || "", e.craneHeightM || ""] : ["", "", ""];
+
+  // ---- GUTTER ----
+  const gc = x.gutterChoices || [];
+  const gutterOn = gc.length > 0 && !gc.includes("NOT_REQUIRED");
+  const g = [
+    gc.length ? (gutterOn ? gc.map((c) => gfLabel(c)).join(" + ") : "Not Required") : "",
+    gutterOn ? labelOrOther(x.gutterMaterial, x.gutterMaterialOther) : "",
+    gutterOn ? labelOrOther(x.downpipeMaterial, x.downpipeMaterialOther) : "",
+  ];
+
+  // ---- VENTILATOR ----
+  const vc = x.roofVentilatorChoices || [];
+  const vent = vc.length ? vc.map((c) => gfLabel(c)).join(" + ") : (e.roofVentilatorRequired === true ? "Required" : e.roofVentilatorRequired === false ? "Not Required" : "");
+  const v = [vent];
+
+  // ---- CANOPY / LOUVER ----
+  const cn = yes(x.canopy) ? [x.canopySize || "", x.canopyHeightFfl || ""] : [x.canopy === "other" ? x.canopyOther || "" : "", ""];
+  const l = [yes(x.louver) ? x.louverSize || "" : x.louver === "other" ? x.louverOther || "" : ""];
 
   return {
     ref: "", date: "",
@@ -91,10 +109,8 @@ export function defaultsFromLead(lead, rate = "") {
     gst: "",
     project: lead.projectName || (typeLabel ? `${typeLabel} building` : "PEB building"), // Project Name from Add Lead -> cover title & subject
     cover: "",                                     // optional cover picture; no picture = no cover page
-    cOn: x.canopy === "yes",
-    oOn: !!(e.skylightRequired || turbine),
-    xOn: !!e.craneRequired,
-    b, c, o, x: xs,
+    fmt: 2,                                        // Building Description in the enquiry-form layout (see PebDoc.mk)
+    b, r, cr, g, v, cn, l,
     reqs: requirementRows(e, x, typeLabel),
     rate,
   };

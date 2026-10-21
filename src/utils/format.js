@@ -5,9 +5,12 @@ export function money(value) {
 export const formatDate = (v) => (v ? new Date(v).toLocaleDateString() : "-");
 export const formatDateTime = (v) => (v ? new Date(v).toLocaleString() : "-");
 
+const LABELS = { CALLED_TO_ORDER: "Called to order" };
+
 /** NEW_LEAD -> "New Lead" */
 export function labelize(value) {
   if (!value) return "-";
+  if (LABELS[value]) return LABELS[value];
   return String(value)
     .toLowerCase()
     .split("_")

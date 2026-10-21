@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { acceptQuotation, getPublicQuotation, quotationPdfUrl, requestQuotationChanges } from "../api/index.js";
+import { calledToOrder, getPublicQuotation, requestQuotationChanges } from "../api/index.js";
 import Alert from "../components/Alert.jsx";
 import StatusBadge from "../components/StatusBadge.jsx";
 import PolicyFooter from "../components/PolicyFooter.jsx";
-import { money } from "../utils/format.js";
+import { money, formatDate } from "../utils/format.js";
 
-const FINAL_STATUSES = ["ACCEPTED", "CHANGES_REQUESTED", "REJECTED", "EXPIRED"];
+const DEFAULT_CALL = "+919942466663"; // MD - used only if the server does not send a number
 
 /** Customer-facing quotation page. Reached from the WhatsApp quotation message: /quotation/<token> */
 export default function Quotation() {
@@ -14,7 +14,7 @@ export default function Quotation() {
   const [quote, setQuote] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
-  const [showChanges, setShowChanges] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
   const [notes, setNotes] = useState("");
   const [result, setResult] = useState(null); // { type, text }
   const [submitting, setSubmitting] = useState(false);
@@ -29,32 +29,25 @@ export default function Quotation() {
     return () => { cancelled = true; };
   }, [token]);
 
-  async function handleAccept() {
-    setSubmitting(true);
-    setResult(null);
-    try {
-      await acceptQuotation(token);
-      setQuote((q) => ({ ...q, status: "ACCEPTED" }));
-      setResult({ type: "success", text: "Thank you! You've accepted the quotation. Our team will contact you shortly." });
-    } catch (err) {
-      setResult({ type: "error", text: err.message });
-    } finally {
-      setSubmitting(false);
-    }
+  /** Tapping "Call to confirm order": the phone opens the dialer (tel: link) and we record "Called to order" on the lead. */
+  function handleCall() {
+    calledToOrder(token)
+      .then(() => setQuote((q) => (q && q.status !== "ORDER_CONFIRMED" ? { ...q, status: "CALLED_TO_ORDER" } : q)))
+      .catch(() => { /* the call must never be blocked by a recording problem */ });
   }
 
-  async function handleSubmitChanges() {
+  async function handleSendFeedback() {
     if (!notes.trim()) {
-      setResult({ type: "error", text: "Please describe what you'd like to change." });
+      setResult({ type: "error", text: "Please write your feedback first." });
       return;
     }
     setSubmitting(true);
     setResult(null);
     try {
       await requestQuotationChanges(token, notes.trim());
-      setQuote((q) => ({ ...q, status: "CHANGES_REQUESTED" }));
-      setShowChanges(false);
-      setResult({ type: "success", text: "Your request has been sent to our team. We'll get back to you shortly." });
+      setNotes("");
+      setShowFeedback(false);
+      setResult({ type: "success", text: "Thank you! Your feedback has been sent to our team. We'll get back to you shortly." });
     } catch (err) {
       setResult({ type: "error", text: err.message });
     } finally {
@@ -69,7 +62,7 @@ export default function Quotation() {
     return <div className="container"><div className="card"><Alert>{loadError || "Unable to load your quotation right now."}</Alert></div></div>;
   }
 
-  const canRespond = !FINAL_STATUSES.includes(quote.status);
+  const callNumber = quote.callPhone || DEFAULT_CALL;
 
   return (
     <div className="container">
@@ -77,40 +70,33 @@ export default function Quotation() {
         <h2>Quotation {quote.quotationNumber}</h2>
         <table>
           <tbody>
-            <tr><td>Customer</td><td>{quote.customerName}</td></tr>
-            <tr><td>Company</td><td>{quote.companyName || "-"}</td></tr>
-            <tr><td>Subtotal</td><td>{money(quote.subtotal)}</td></tr>
-            <tr><td>Discount</td><td>{money(quote.discount)}</td></tr>
-            <tr><td>Tax</td><td>{money(quote.tax)}</td></tr>
-            <tr className="total-row"><td>Total amount</td><td>{money(quote.totalAmount)}</td></tr>
-            <tr><td>Valid until</td><td>{quote.validUntil || "-"}</td></tr>
+            <tr><td>Name</td><td>{quote.customerName}</td></tr>
+            <tr><td>Company name</td><td>{quote.companyName || "-"}</td></tr>
+            <tr><td>Phone number</td><td>{quote.phone || "-"}</td></tr>
+            <tr><td>Address</td><td style={{ whiteSpace: "pre-line" }}>{quote.address || "-"}</td></tr>
+            <tr className="total-row"><td>Total</td><td>{money(quote.totalAmount)}</td></tr>
+            <tr><td>Valid until</td><td>{quote.validUntil ? formatDate(quote.validUntil) : "-"}</td></tr>
             <tr><td>Status</td><td><StatusBadge status={quote.status} /></td></tr>
           </tbody>
         </table>
 
-        <p className="pdf-link">
-          <a href={quotationPdfUrl(token)} target="_blank" rel="noreferrer">Download PDF quotation</a>
-        </p>
+        <div className="row actions">
+          <a href={`tel:${callNumber}`} className="btn btn-success" style={{ textDecoration: "none", textAlign: "center" }} onClick={handleCall}>
+            Call to confirm order
+          </a>
+          <button type="button" className="btn btn-secondary" disabled={submitting} onClick={() => setShowFeedback((v) => !v)}>
+            Feedbacks
+          </button>
+        </div>
 
-        {canRespond && (
-          <div className="row actions">
-            <button type="button" className="btn btn-success" disabled={submitting} onClick={handleAccept}>
-              Accept quotation
-            </button>
-            <button type="button" className="btn btn-danger" disabled={submitting} onClick={() => setShowChanges(true)}>
-              Request changes
-            </button>
-          </div>
-        )}
-
-        {canRespond && showChanges && (
+        {showFeedback && (
           <div className="changes-form">
             <div className="field">
-              <label htmlFor="changeNotes">What would you like to change?</label>
-              <textarea id="changeNotes" value={notes} onChange={(e) => setNotes(e.target.value)} />
+              <label htmlFor="feedbackNotes">Your feedback</label>
+              <textarea id="feedbackNotes" value={notes} onChange={(e) => setNotes(e.target.value)} />
             </div>
-            <button type="button" className="btn btn-primary btn-block" disabled={submitting} onClick={handleSubmitChanges}>
-              {submitting ? "Sending…" : "Send request"}
+            <button type="button" className="btn btn-primary btn-block" disabled={submitting} onClick={handleSendFeedback}>
+              {submitting ? "Sending…" : "Send feedback"}
             </button>
           </div>
         )}

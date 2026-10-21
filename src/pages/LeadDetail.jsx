@@ -11,7 +11,7 @@ import { TIMELINE_LABELS, TIMELINE_ORDER } from "../utils/constants.js";
 import { formatDateTime, labelize, money } from "../utils/format.js";
 import { gfLabel } from "../utils/constants.js";
 
-const EXTRA_STATUSES = ["CHANGES_REQUESTED", "REJECTED", "CLOSED"];
+const EXTRA_STATUSES = ["CALLED_TO_ORDER", "CHANGES_REQUESTED", "REJECTED", "CLOSED"];
 /** Statuses where the quotation was already sent once, so the button says "Re-send". */
 const RESENDABLE = ["SENT", "VIEWED", "CHANGES_REQUESTED"];
 const MAX_PDF_MB = 15;
@@ -225,7 +225,7 @@ export default function LeadDetail() {
             onClick={() => setShowQuoteBuilder((v) => !v)}>
             {showQuoteBuilder ? "Close quotation builder" : "Build quotation"}
           </button>
-          {lead.status === "ACCEPTED" && (
+          {(lead.status === "ACCEPTED" || lead.status === "CALLED_TO_ORDER") && (
             <button type="button" className="btn btn-success" disabled={!!busy}
               onClick={() => run("order", () => confirmOrder(lead.id), "Order confirmed.")}>
               {busy === "order" ? "Confirming…" : "Confirm order"}

@@ -1,6 +1,6 @@
 export const STATUSES = [
   "NEW", "WELCOME_SENT", "FORM_SENT", "FORM_SUBMITTED", "QUOTATION_GENERATED",
-  "QUOTATION_SENT", "QUOTATION_VIEWED", "ACCEPTED", "CHANGES_REQUESTED",
+  "QUOTATION_SENT", "QUOTATION_VIEWED", "CALLED_TO_ORDER", "ACCEPTED", "CHANGES_REQUESTED",
   "REJECTED", "ORDER_CONFIRMED", "CLOSED",
 ];
 
@@ -19,6 +19,7 @@ export const SUMMARY_CARDS = [
   ["formsPending", "Forms Pending"],
   ["formsSubmitted", "Forms Submitted"],
   ["quotationsSent", "Quotations Sent"],
+  ["calledToOrder", "Called to Order"],
   ["quotationsAccepted", "Accepted"],
   ["changesRequested", "Changes Requested"],
   ["ordersConfirmed", "Orders Confirmed"],
@@ -42,7 +43,7 @@ export const TIMELINE_LABELS = {
   ORDER_CONFIRMED: "Order Confirmed",
 };
 
-const GOOD = new Set(["ACCEPTED", "ORDER_CONFIRMED", "READ", "DELIVERED"]);
+const GOOD = new Set(["ACCEPTED", "CALLED_TO_ORDER", "ORDER_CONFIRMED", "READ", "DELIVERED"]);
 const BAD = new Set(["FAILED", "REJECTED", "CHANGES_REQUESTED", "EXPIRED"]);
 
 export function toneFor(status) {

@@ -100,4 +100,5 @@ export const getPublicQuotation = (token) => request(`/api/public/quotations/${t
 export const acceptQuotation = (token) => request(`/api/public/quotations/${token}/accept`, { method: "POST" });
 export const requestQuotationChanges = (token, notes) =>
   request(`/api/public/quotations/${token}/request-changes`, { method: "POST", body: { notes } });
-export const quotationPdfUrl = (token) => apiUrl(`/api/public/quotations/${token}/pdf`);
+/** Customer tapped "Call to confirm order": the lead is marked "Called to order" in the dashboard. */
+export const calledToOrder = (token) => request(`/api/public/quotations/${token}/called-to-order`, { method: "POST" });
