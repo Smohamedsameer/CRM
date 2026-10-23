@@ -726,6 +726,7 @@ tbody tr:hover { background: rgba(255, 255, 255, 0.02); }
 .chat-window.open { background: rgba(61, 220, 132, 0.14); color: var(--success); }
 .chat-window.closed { background: rgba(255, 107, 107, 0.12); color: var(--danger); }
 .chat-viewlead { text-decoration: none; }
+.chat-section { padding: 10px 16px 6px; font-size: 11.5px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); border-top: 1px solid var(--border); background: rgba(255, 255, 255, 0.03); }
 
 .chat-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 14px 18px 18px; }
 .chat-day-wrap { display: flex; justify-content: center; margin: 12px 0 8px; }
@@ -756,6 +757,43 @@ tbody tr:hover { background: rgba(255, 255, 255, 0.02); }
 }
 .chat-send:disabled { opacity: 0.45; cursor: not-allowed; }
 .chat-closed-note { padding: 14px 18px; background: var(--card-bg); border-top: 1px solid var(--border); color: var(--muted); font-size: 13px; text-align: center; }
+
+/* attachments, delete, staged file */
+.chat-bubble { position: relative; }
+.chat-bubble.deleted { background: transparent !important; box-shadow: none; outline: 1px dashed var(--border); color: var(--muted); }
+.chat-del {
+  position: absolute; top: 4px; right: 4px; width: 26px; height: 26px; border: none; border-radius: 50%; cursor: pointer;
+  background: rgba(0, 0, 0, 0.35); color: #fff; display: none; align-items: center; justify-content: center; padding: 0;
+}
+.chat-bubble:hover .chat-del, .chat-del:focus-visible { display: inline-flex; }
+@media (hover: none) { .chat-del { display: inline-flex; opacity: 0.7; } }
+.chat-del:hover { background: var(--danger); }
+.chat-attach-card {
+  display: flex; align-items: center; gap: 10px; width: 100%; min-width: 220px; padding: 9px 10px; margin-bottom: 4px;
+  border: none; border-radius: 8px; cursor: pointer; text-align: left; color: inherit; background: rgba(0, 0, 0, 0.22);
+}
+.chat-attach-card:hover { background: rgba(0, 0, 0, 0.32); }
+.chat-attach-kind {
+  flex: none; min-width: 40px; padding: 8px 4px; border-radius: 6px; background: var(--primary); color: var(--on-primary);
+  font-size: 11px; font-weight: 800; text-align: center;
+}
+.chat-attach-info { display: flex; flex-direction: column; min-width: 0; }
+.chat-attach-name { font-size: 13.5px; font-weight: 600; overflow-wrap: anywhere; }
+.chat-attach-size { font-size: 11.5px; opacity: 0.65; }
+.chat-attach-err { font-size: 12px; color: #ffb4b4; margin-bottom: 4px; }
+.chat-attach-img img { display: block; max-width: 100%; max-height: 280px; border-radius: 8px; cursor: zoom-in; margin-bottom: 4px; }
+.chat-attach-loading { padding: 24px 40px; font-size: 12.5px; opacity: 0.7; }
+.chat-attach-btn {
+  flex: none; width: 42px; height: 46px; border: none; background: transparent; color: var(--muted); cursor: pointer;
+  display: flex; align-items: center; justify-content: center; border-radius: 50%;
+}
+.chat-attach-btn:hover:not(:disabled) { color: var(--text); }
+.chat-attach-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.chat-staged { display: flex; align-items: center; gap: 10px; padding: 8px 16px; background: var(--card-bg); border-top: 1px solid var(--border); font-size: 13px; }
+.chat-staged-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chat-staged-name small { color: var(--muted); }
+.chat-staged-x { border: none; background: transparent; color: var(--muted); font-size: 22px; line-height: 1; cursor: pointer; }
+.chat-staged-x:hover { color: var(--danger); }
 
 /* phones: one pane at a time (list, then the open chat with a back button) */
 @media (max-width: 800px) {

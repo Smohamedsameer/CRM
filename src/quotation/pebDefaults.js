@@ -108,7 +108,7 @@ export function defaultsFromLead(lead, rate = "") {
     addr: lead.address || "",                       // fetched from Add Lead
     loc: e.location || "",                         // Project Location from the customer's form
     gst: "",
-    project: lead.projectName || (typeLabel ? `${typeLabel} building` : "PEB building"), // Project Name from Add Lead -> cover title & subject
+    project: lead.projectName || x.projectPurpose || (typeLabel ? `${typeLabel} building` : "PEB building"), // Project Name from Add Lead -> cover title & subject
     cover: "",                                     // optional cover picture; no picture = no cover page
     fmt: 2,                                        // Building Description in the enquiry-form layout (see PebDoc.mk)
     // a table is printed only when the customer asked for that item ("Not required" / unanswered = no table)

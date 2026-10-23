@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { createLead } from "../api/index.js";
 import Alert from "../components/Alert.jsx";
 import { SOURCES } from "../utils/constants.js";
@@ -11,7 +11,8 @@ const EMPTY = {
 
 export default function AddLead() {
   const navigate = useNavigate();
-  const [form, setForm] = useState(EMPTY);
+  const [params] = useSearchParams(); // /leads/new?name=..&phone=.. comes from Chat > Other > "Add as lead"
+  const [form, setForm] = useState(() => ({ ...EMPTY, customerName: params.get("name") || "", phone: params.get("phone") || "" }));
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [saving, setSaving] = useState(false);

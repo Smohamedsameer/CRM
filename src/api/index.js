@@ -1,4 +1,4 @@
-import { request, apiUrl, openAuthedPdf, sessionStorageHelper } from "./client.js";
+import { request, apiUrl, openAuthedPdf, sessionStorageHelper, fetchAuthedBlob, uploadForm } from "./client.js";
 
 // ---- Employee (JWT) ----------------------------------------------------
 export const login = (email, password) =>
@@ -102,3 +102,25 @@ export const requestQuotationChanges = (token, notes) =>
   request(`/api/public/quotations/${token}/request-changes`, { method: "POST", body: { notes } });
 /** Customer tapped "Call to confirm order": the lead is marked "Called to order" in the dashboard. */
 export const calledToOrder = (token) => request(`/api/public/quotations/${token}/called-to-order`, { method: "POST" });
+/** Sends a PDF / image / office file (optional caption). WhatsApp allows it only while the customer's 24h window is open. */
+export function sendChatAttachment(leadId, file, caption) {
+  const form = new FormData();
+  form.append("file", file);
+  if (caption) form.append("caption", caption);
+  return uploadForm(`/api/chat/leads/${leadId}/attachments`, form);
+}
+export const getChatAttachmentBlob = (messageId) => fetchAuthedBlob(`/api/chat/messages/${messageId}/attachment`);
+/** Delete for everyone: removes the message from the CRM chat for all staff (it stays on the customer's WhatsApp). */
+export const deleteChatMessage = (messageId) => request(`/api/chat/messages/${messageId}`, { method: "DELETE", auth: true });
+
+// ---- Chat with numbers that are not in our leads ("Other") - phone = digits incl. country code ----
+export const getOtherChatThread = (phone) => request(`/api/chat/others/${phone}`, { auth: true });
+export const markOtherChatRead = (phone) => request(`/api/chat/others/${phone}/read`, { method: "POST", auth: true });
+export const sendOtherChatMessage = (phone, text) =>
+  request(`/api/chat/others/${phone}/messages`, { method: "POST", body: { text }, auth: true });
+export function sendOtherChatAttachment(phone, file, caption) {
+  const form = new FormData();
+  form.append("file", file);
+  if (caption) form.append("caption", caption);
+  return uploadForm(`/api/chat/others/${phone}/attachments`, form);
+}

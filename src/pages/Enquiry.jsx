@@ -15,6 +15,7 @@ import {
 /** Everything the customer answers (the Google Form "Senela International Ventures - PEB Enquiry Form"). */
 const EMPTY = {
   projectLocation: "",
+  projectPurpose: "", // optional
   // 1. Building type
   buildingType: "", buildingTypeOther: "", columnType: "", columnTypeOther: "", endFrameType: "", endFrameTypeOther: "",
   // Building dimensions (free text: "mention mtr / ft")
@@ -216,6 +217,7 @@ export default function Enquiry() {
               <div className="field"><label>Company Address</label><textarea disabled value={customer?.address ?? ""} style={{ minHeight: 60 }} /></div>
             </div>
             {T("projectLocation", "Project Location", { required: true })}
+            {T("projectPurpose", "Project Purpose", { required: false, placeholder: "e.g. Factory, Warehouse, Workshop, Godown" })}
 
             <hr />
             <h3>1. Building Type</h3>

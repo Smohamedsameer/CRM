@@ -163,6 +163,7 @@ export default function LeadDetail() {
   const list = (arr, other) => (arr || []).map((v) => pick(v, other)).filter(Boolean).join(", ");
   const v2Rows = extra.v === 2 ? [
     ["Project location", extra.projectLocation],
+    ["Project purpose", extra.projectPurpose],
     ["Type of building", pick(extra.buildingType, extra.buildingTypeOther)],
     ["Column type", pick(extra.columnType, extra.columnTypeOther)],
     ["End frame type", pick(extra.endFrameType, extra.endFrameTypeOther)],

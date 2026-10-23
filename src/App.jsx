@@ -30,6 +30,7 @@ export default function App() {
         <Route path="/leads/:id" element={<LeadDetail />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/chat" element={<Chat />} />
+        <Route path="/chat/other/:phone" element={<Chat />} />
         <Route path="/chat/:leadId" element={<Chat />} />
         <Route path="/client-requests" element={<ClientRequests />} />
         <Route path="/documents" element={<Documents />} />

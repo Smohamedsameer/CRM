@@ -134,3 +134,55 @@ export async function openAuthedPdf(path) {
   // Revoke well after the new tab has had time to load it, rather than immediately.
   setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
+
+/** Fetches a file with the employee's JWT and returns the Blob (used for chat files, which need login). */
+export async function fetchAuthedBlob(path) {
+  const session = sessionStorageHelper.read();
+  if (session && isTokenExpired(session.token)) {
+    if (onUnauthorized) onUnauthorized();
+    throw new ApiError("Your session has expired. Please log in again.", 401);
+  }
+  let res;
+  try {
+    res = await fetch(`${BASE}${path}`, { headers: session ? { Authorization: `Bearer ${session.token}` } : {} });
+  } catch {
+    throw new ApiError("Network error. Please check your connection and try again.", 0);
+  }
+  if (res.status === 401) {
+    if (onUnauthorized) onUnauthorized();
+    throw new ApiError("Your session has expired. Please log in again.", 401);
+  }
+  if (!res.ok) throw new ApiError("Could not load the file.", res.status);
+  return res.blob();
+}
+
+/** POSTs multipart/form-data with the JWT (the browser sets the boundary, so no Content-Type header here). */
+export async function uploadForm(path, formData) {
+  const session = sessionStorageHelper.read();
+  if (session && isTokenExpired(session.token)) {
+    if (onUnauthorized) onUnauthorized();
+    throw new ApiError("Your session has expired. Please log in again.", 401);
+  }
+  let res;
+  try {
+    res = await fetch(`${BASE}${path}`, {
+      method: "POST",
+      headers: session ? { Authorization: `Bearer ${session.token}` } : {},
+      body: formData,
+    });
+  } catch {
+    throw new ApiError("Network error. Please check your connection and try again.", 0);
+  }
+  if (res.status === 401) {
+    if (onUnauthorized) onUnauthorized();
+    throw new ApiError("Your session has expired. Please log in again.", 401);
+  }
+  const text = await res.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch { data = null; }
+  if (!res.ok) {
+    const tooBig = res.status === 413 ? "The file is too large (limit 10 MB)." : "";
+    throw new ApiError((data && data.message) || tooBig || "Something went wrong. Please try again.", res.status);
+  }
+  return data;
+}
